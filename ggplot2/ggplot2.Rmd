@@ -1,0 +1,1325 @@
+---
+title: "ggplot2包学习笔记"
+author: "Fang Yongchao"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
+    number_section: true
+  runtime: shiny
+---
+
+```{r PACKAGES, echo=FALSE, message=FALSE, warning=FALSE}
+library(ggplot2)
+library(dplyr)
+```
+
+# Basics
+
+一张图包括最基础的`ggplot()`，统计变换和作图函数`<GEOM_FUNCTION>`，坐标轴函数`<COORDINATE_FUNCTION>`，分面函数`<FACET_FUNCTION>`，标度函数`<SCALE_FUNCTION>`以及主题函数` <THEME_FUNCTION>`
+
+```{r, eval=FALSE}
+# NOT RUN
+ggplot(data = <DATA>) +
+  <GEOM_FUNCTION>(mapping = aes(<MAPPING>), 
+                  stat = <STAT>,
+                  position = <POSITION>) +
+  <COORDINATE_FUNCTION> +
+  <FACET_FUNCTION> +
+  <SCALE_FUNCTION> +
+  <THEME_FUNCTION>
+# 返回最后一张图
+last_plot()
+# 保存图像
+ggsave("plot.png", width = 5, height = 5)
+```
+
+# Stat & Geom
+
+## `stat_bin()`：对连续x的数量进行统计
+
+- `aes()`必须参数：**x**，**y(count, density, ncount, ndensity)**
+- **binwidth**：每一个柱的宽度
+- **bins**：柱的数量
+- **center**和**boundary**：若**center**设为"t"，则有一根柱以"t"为中线；若**boundary**设为"t"，则有一根柱以"t"为边线
+- **breaks**：直接设定每一根柱的边线位置，该参数会覆盖以上所有参数
+- **closed**：若为"right"，处于交界处的值属于右边的柱子；若为"left"，处于交界处的值属于左边的柱子
+- **pad**：是否在图的左右两侧加空白，若为"TRUE"，最后呈现的图从零开始到零结束
+- **x**应该是连续的，离散的**x**使用`stat_count()`
+
+```{r}
+c <- ggplot(mpg, aes(hwy))
+```
+
+```{r}
+# stat_bin()
+c + stat_bin(
+  aes(y = ..density..), binwidth = 1, boundary = 0, pad = TRUE
+  )
+```
+
+### `geom_freqpoly()`：频率多边形
+
+```{r}
+# geom_freqpoly()
+c + geom_freqpoly(binwidth = 1)
+```
+
+### `geom_histogram()`：直方图
+
+```{r}
+# geom_histogram()
+c + geom_histogram(binwidth = 1, boundary = 0.5)
+```
+
+## `stat_count()`：对离散x的数量进行统计
+
+- `aes()`必须参数：**x**，**y(count,prop)**
+- **width**：柱子的宽度，默认两个柱中线距离的90%
+- 当**y**取"prop"时需要配合**group**使用，具体结果意义不明
+- **x**应该是离散的，当然，任何连续的都可以看成是离散的
+
+```{r}
+d <- ggplot(mpg, aes(fl))
+```
+
+```{r}
+# stat_count()
+d + stat_count(width = 0.9)
+```
+
+### `geom_bar()`：柱形图
+
+```{r}
+# geom_bar()
+d + geom_bar()
+```
+
+### `geom_col()`：加强版柱形图
+
+- `aes()`必须参数：**x**，**y**
+- 类似`geom_bar()`，但是柱的高度并不是对**x**的计数，而是**y**的和
+
+```{r}
+fyc <- tibble(long = rep(1:5, c(1:5)), lat = 1)
+```
+
+```{r}
+# geom_col()
+ggplot(fyc, aes(long, lat)) + geom_col()
+```
+
+## `stat_density()`：计算x的密度曲线
+
+- `aes()`必须参数：**x**，**y(density, count, scaled, ndensity)**
+- **bw**：可以为数字，意义类似于**binwidth**；可以为字符串，表示方法
+- **adjust**：对**bw**进行调整，不知道有什么用
+- **kernel**："gaussian", "epanechnikov", "rectangular", "triangular", "biweight", "cosine", "optcosine"
+- **n**：估计时使用的点的数量，需要为2的n次方
+- **trim**：不明
+- `stat_density()`的默认作图是`geom_area()`，所以最终图并不是曲线而是填充的图
+
+```{r}
+c <- ggplot(mpg, aes(hwy))
+```
+
+```{r}
+# stat_density()
+c + stat_density(kernel = "epanechnikov")
+```
+
+### `geom_density()`：光滑密度曲线
+
+```{r}
+# geom_density()
+c + geom_density(kernel = "gaussian")
+```
+
+## `stat_bin_2d()`和`stat_bin_hex()`：统计区域中点的数量
+
+- `aes()`必须参数：**x**，**y**
+- **binwidth**：给出每个小区域的c(水平方向长度, 竖直方向长度)
+- **bins**：给出c(水平方向小区域块的数量, 竖直方向小区域块的数量)
+- **drop**：是否不显示点的个数为零的区域
+- 对于连续变量，通过区域填充颜色来体现区域内点的个数，当图中点数过多的时候很有用
+- 只有`stat_bin_2d()`中有**drop**参数，`stat_bin_hex()`默认**drop**是"TRUE"
+
+```{r}
+e <- ggplot(mpg, aes(cty, hwy))
+```
+
+```{r}
+# stat_bin_2d()
+e + stat_bin_2d(binwidth = 1, drop = TRUE)
+```
+
+```{r}
+# stat_bin_hex()
+e + stat_bin_hex(binwidth = 1)
+```
+
+### `geom_bin2d()`：二维热图
+
+```{r}
+# geom_bin2d()
+e + geom_bin2d()
+```
+
+### `geom_hex()`：更好看的二维热图
+
+```{r}
+# geom_hex()
+e + geom_hex()
+```
+
+## `stat_quantile()`：对x，y作分位数回归
+
+- `aes()`必须参数：**x**，**y**
+- **quantiles**：**y**的条件分位数
+- **formula**：拟合的公式
+- **method**：分位数回归的方法
+- **method.args**：方法的参数
+- **lineend**：不明
+- **linejoin**：不明
+- **linemitre**：不明
+- `stat_quantile()`和`geom_quantile()`感觉并没什么区别
+
+```{r}
+e <- ggplot(mpg, aes(cty, hwy))
+```
+
+```{r}
+# stat_quantile()
+e + 
+  stat_quantile(
+    quantiles = c(0.1, 0.9), formula = y ~ log(x), method = "rq"
+  ) + 
+  geom_point()
+```
+
+### `geom_quantile()`：分位数回归
+
+```{r}
+# geom_quantile()
+e + 
+  geom_quantile(
+    quantiles = c(0.1, 0.9), formula = y ~ log(x), method = "rq"
+  ) +
+  geom_point()
+```
+
+## `stat_smooth()`：计算x，y的拟合曲线
+
+- `aes()`必须参数：**x**，**y**
+- **method**：拟合方法
+- **formula**：拟合公式
+- **se**：是否在曲线两边绘制置信区间
+- **n**：用于绘制拟合曲线的点的个数
+- **span**：不明
+- **fullrange**：不明
+- **level**：置信区间的置信水平
+- **method.args**：方法的参数
+- 当点过多且重叠无法看出点的趋势时使用
+- `stat_smooth()`和`geom_smooth()`没什么区别
+
+```{r}
+e <- ggplot(mpg, aes(cty, hwy))
+```
+
+```{r}
+# stat_smooth()
+e + 
+  stat_smooth(
+      method = "lm", formula = y ~ x, se = TRUE, level = 0.95,
+  ) +
+  geom_point()
+```
+
+### `geom_smooth()`：绘制拟合曲线
+
+```{r}
+# geom_smooth()
+e + 
+  geom_smooth(
+      method = "lm", formula = y ~ x, se = TRUE, level = 0.95,
+  ) +
+  geom_point()
+```
+
+## `stat_boxplot()`：对离散x，连续y作箱线图
+
+- `aes()`必须参数：**x**，**y**
+- **outlier.(colour, fill, shape, size, stroke, alpha)**：离群值的颜色，填充色(??)，形状，大小，大小(??)，透明度
+- **notch**：是否绘制有缺口的箱，有缺口的箱子可以看出数据间中位数的不同
+- **notchwidth**：缺口的宽度，为1时其实就是正常的箱了
+- **varwidth**：数据量的多少是否影响箱的宽度
+- **coef**：线的长度，直接影响哪些值会被判定为离群值
+- `stat_boxplot()`和`geom_boxplot()`没有区别
+
+```{r}
+f <- ggplot(mpg, aes(class, hwy))
+```
+
+```{r}
+# stat_boxplot()
+f + stat_boxplot()
+```
+
+### `geom_boxplot()`：绘制箱线图
+
+```{r}
+# geom_boxplot()
+f + geom_boxplot()
+```
+
+## `stat_ydensity()`：计算y的密度曲线
+
+- `aes()`必须参数：**x**, **y**
+- **bw**：可以为数字，意义类似于**binwidth**；可以为字符串，表示方法
+- **adjust**：对**bw**进行调整，不知道有什么用
+- **kernel**："gaussian", "epanechnikov", "rectangular", "triangular", "biweight", "cosine", "optcosine"
+- **scale**：若选择"area"，各个图的面积会一致；若选择"count"，面积会由点的个数决定；若为"width"，会在"count"的基础上强行把宽度一致
+- **trim**：不明
+- `geom_violin()`是`geom_density()`和`geom_boxplot()`的合体
+
+```{r}
+f <- ggplot(mpg, aes(class, hwy))
+```
+
+```{r}
+# stat_ydensity()
+f + stat_ydensity(kernel = "gaussian", scale = "area")
+```
+
+### `geom_violin()`：小提琴图
+
+```{r}
+# geom_violin()
+f + geom_violin(scale = "width")
+```
+
+## `stat_sum()`：统计点的数量
+
+- `aes()`必须参数：**x**，**y**
+- 适用于overplot的离散型数据
+
+```{r}
+e <- ggplot(mpg, aes(cty, hwy))
+```
+
+```{r}
+# stat_sum()
+e + stat_sum()
+```
+
+### `geom_count()`：绘制图展示点的数量
+
+```{r}
+# geom_count()
+e + geom_count()
+```
+
+## `stat_contour()`：计算等高线
+
+- `aes()`必须参数：**x**，**y**，**z**
+- **lineend**：不明
+- **linejoin**：不明
+- **linemitre**：不明
+
+```{r}
+seals <- seals %>% 
+  mutate(z = sqrt(delta_long^2 + delta_lat^2))
+l <- ggplot(seals, aes(long, lat))
+```
+
+```{r}
+# stat_contour()
+l + stat_contour(aes(z = z))
+```
+
+### `geom_contour()`：绘制等高线来描述第三维
+
+```{r}
+# geom_contour()
+l + geom_contour(aes(z = z))
+```
+
+## `stat_summary()`和`stat_summary_bin()`：在x上对y进行summary
+
+- `aes()`必须参数：**x**、**y**
+- **fun.data**：一个函数，输入是**y**，输出y、ymin和ymax
+- **fun.y**、**fun.ymin**和**fun.ymax**：与**fun.data**同理
+- **fun.args**：上述函数的参数
+- **binwidth**：对**x**进行bin的宽度
+- **bins**：对**x**进行bin的数量
+- **breaks**：直接设定每次bin的范围，该参数会覆盖以上所有参数
+- `stat_summary()`和`stat_summary_bin()`都是默认`geom_pointrange()`
+- `stat_summary()`对每个**x**进行summary，而`stat_summary_bin()`对binned的**x**进行summary
+
+```{r}
+e <- ggplot(mpg, aes(cty, hwy))
+```
+
+```{r, warning=FALSE}
+# stat_summary()
+e + 
+  stat_summary(fun.data = "mean_cl_boot") +
+  geom_point(colour = "red", size = 1)
+```
+
+```{r, warning=FALSE}
+# stat_summary_bin()
+e + 
+  stat_summary_bin(fun.data = "mean_cl_boot", binwidth = 2) +
+  geom_point(colour = "red", size = 1)
+```
+
+## `stat_summary_hex()`和`stat_summary_2d()`：在x、y上对z进行summary
+
+- **aes()**必须参数：**x**、**y**、**z**
+- **binwidth**：给出每个小区域的c(水平方向长度, 竖直方向长度)
+- **bins**：给出c(水平方向小区域块的数量, 竖直方向小区域块的数量)
+- **drop**：是否不显示**fun**的返回值是NA的位置
+- **fun**：对**z**进行统计的函数
+- **fun.args**：函数的参数
+- `stat_summary_2d()`是三维版的`stat_summary()`，而`stat_summary_hex()`又是hex版的`stat_summary_2d()`
+
+```{r}
+l <- ggplot(seals, aes(long, lat))
+```
+
+```{r}
+# stat_summary_2d()
+l + stat_summary_2d(aes(z = z), binwidth = c(20, 10),fun = mean)
+```
+
+```{r}
+# stat_summary_hex()
+l + stat_summary_hex(aes(z = z), binwidth = c(20, 10), fun = max)
+```
+
+## `stat_function()`：通过x和fun计算y并绘制曲线
+
+- `aes()`必须参数：**x**
+- **fun**：函数名
+- **xlim**：函数的定义域
+- **n**：用来绘制曲线的点的个数
+- **args**：函数的参数
+
+```{r}
+# stat_function()
+ggplot() + 
+  stat_function(
+    aes(x = -3:3), n = 99, fun = dnorm, 
+    args = list(sd = 0.5), xlim = c(-1,1)
+  )
+```
+
+## `stat_ecdf()`：计算经验累计分布函数（待补全）
+
+- `aes()`必须参数：**x**、**y**
+- **n**：
+- **pad**：
+- ecdf的geom是step
+
+```{r}
+e <- ggplot(mpg, aes(cty, hwy))
+```
+
+```{r}
+# stat_ecdf()
+e + stat_ecdf(n = NULL, pad = FALSE)
+```
+
+## `stat_qq()`和`stat_qq_line()`：（待补全）
+
+```{r}
+c2 <- ggplot(mpg)
+```
+
+```{r}
+# stat_qq()
+ggplot() + stat_qq(
+  aes(sample = 1:100), distribution = qt, dparams = list(df = 5)
+)
+```
+
+### `geom_qq()`：
+
+```{r}
+c2 + geom_qq(aes(sample = hwy))
+```
+
+### `geom_qq_line()`：
+
+```{r}
+c2 + geom_qq_line(aes(sample = hwy))
+```
+
+## `stat_density_2d()`：计算二维密度（待补全）
+
+- `aes()`必须参数：**x**，**y**
+- **contour**：
+- **n**：
+- **h**：
+- **lineend**：不明
+- **linejoin**：不明
+- **linemitre**：不明
+- 不是很明白等高线的意义
+
+```{r}
+e <- ggplot(mpg, aes(cty, hwy))
+```
+
+```{r}
+e + 
+  stat_density_2d(contour = TRUE, n = 100) +
+  geom_point()
+```
+
+### `geom_density2d()`：通过绘制等高线来描述二维密度(??)
+
+```{r}
+e + geom_density2d()
+```
+
+## `stat_ellipse()`：计算normal confidence椭圆(??)（待补全）
+
+- `aes()`必须参数：**x**、**y**
+- **type**：
+- **level**：
+- **segment**：
+
+```{r}
+e <- ggplot(mpg, aes(cty, hwy))
+```
+
+```{r}
+e + 
+  stat_ellipse(type = "enclid", level = 0.95, segments = 51) +
+  geom_point()
+```
+
+## `geom_blank()`：一片空白
+
+- 无参数
+
+```{r}
+# geom_blank()
+ggplot(mpg, aes(cty, hwy)) + geom_blank()
+```
+
+## `geom_curve()`和`geom_segment()`：绘制连接两点的曲线/箭头
+
+- `aes()` 必须参数：**x**、**y**、**xend**、**yend**
+- **curvature**：曲线的曲率，正数向右，负数向左，曲率越大曲线弯曲程度越大，必须为一个数字，我也不知道为什么
+- **angle**：偏度，取值"0"到"180"，越小曲线越偏向起始点，可以为向量
+- **ncp**：用来画曲线使用的点的个数，越多曲线越平滑
+- **arrow**：通过`arrow()`创建一个arrow对象进行赋值
+  - **angle**：为箭头与曲线的夹角
+  - **length**：一个unit对象，通过`unit()`生成
+  - **ends**为箭头位置，可以为"first"、"last"或"both"
+  - **type**为箭头类型，可以为"open"、"closed"
+- **arrow.fill**：当**arrow**的**type**是"closed"时可选择填充颜色
+- **lineend**：不明
+- **linejoin**：不明
+- `geom_segment()`其实就是**curvature**为"0"、**angle**为"90"的`geom_curve()`
+
+```{r}
+fyc <- tibble(long = c(10, 12), lat = c(10, 12))
+```
+
+```{r}
+# geom_curve()
+ggplot(fyc, aes(long, lat)) + 
+  geom_curve(
+    aes(yend = lat + 1, xend = long + 1),
+    curvature = 0.5,
+    angle = c(45, 135),
+    ncp = 5,
+    arrow = arrow(angle = 30, length = unit(0.1, "inches"),
+                  ends = "last", type = "closed"),
+    arrow.fill = "red",
+    lineend = "butt"
+  )
+```
+
+```{r}
+# geom_segment()
+ggplot(fyc, aes(long, lat)) + 
+  geom_segment(
+    aes(yend = lat + 1, xend = long + 1),
+    arrow = arrow(angle = 30, length = unit(0.25, "inches"),
+                  ends = "both", type = "closed"),
+    arrow.fill = "green",
+    lineend = "butt",
+    linejoin = "round"
+  )
+```
+
+## `geom_path()`、`geom_line()`和`geom_step()`：连接各点
+
+- `aes()`必须参数：**x**、**y**
+- **direction**：阶梯的方向，"hv"为先水平后竖直，"vh"为先竖直后水平
+- **arrow**：通过`arrow()`创建一个arrow对象进行赋值
+- **lineend**：不明
+- **linejoin**：不明
+- **linemitre**：不明
+- `geom_path()`按照数据顺序连接各点；`geom_line()`按照从左到右连接各点；`geom_step()`用阶梯连接各点
+- 对于NA的处理方式：
+  - NA出现在数据中间：`geom_path()`会断开，无论**na.rm**是"TRUE"还是"FALSE"；`geom_line()`会删除NA并警告；`geom_step()`会删除NA无警告
+  - NA出现在数据开始或结束：如果**na.rm**为"TRUE"，删除NA无警告；如果**na.rm**为"FALSE"，删除NA有警告
+
+```{r}
+fyc <- tibble(
+  long = c(1,5,4,3,2), lat = c(1,1,2,3,2)
+)
+fyc <- ggplot(fyc, aes(long, lat))
+```
+
+```{r}
+# geom_path()
+fyc + geom_path()
+```
+
+```{r}
+# geom_line()
+fyc + geom_line()
+```
+
+```{r}
+# geom_step()
+fyc + geom_step(direction = "hv")
+```
+
+## `geom_polygon()`：绘制多边形
+
+- `aes()`必须参数：**x**、**y**
+- **rule**："evenodd"或"winding"，区别不明
+- `geom_polygon()`是在`geom_path()`的基础上，连接第一个点与最后一个点，然后用颜色填充中间围起来的部分，点的数据够多的话能画任意图像
+
+```{r}
+ids <- factor(c("1.1", "2.1", "1.2", "2.2", "1.3", "2.3"))
+values <- data.frame(
+  id = ids,
+  value = c(3, 3.1, 3.1, 3.2, 3.15, 3.5)
+)
+positions <- data.frame(
+  id = rep(ids, each = 4),
+  x = c(2, 1, 1.1, 2.2, 1, 0, 0.3, 1.1, 2.2, 1.1, 1.2, 2.5, 1.1,
+        0.3, 0.5, 1.2, 2.5, 1.2, 1.3, 2.7, 1.2, 0.5, 0.6, 1.3),
+  y = c(-0.5, 0, 1, 0.5, 0, 0.5, 1.5, 1, 0.5, 1, 2.1, 1.7, 1, 1.5,
+        2.2, 2.1, 1.7, 2.1, 3.2, 2.8, 2.1, 2.2, 3.3, 3.2)
+)
+datapoly <- merge(values, positions, by = c("id"))
+# geom_polygon()
+p <- ggplot(datapoly, aes(x = x, y = y)) +
+  geom_polygon(aes(fill = value, group = id))
+p + geom_point(colour = "red")
+```
+
+```{r}
+holes <- do.call(
+  rbind, 
+  lapply(
+    split(datapoly, datapoly$id),
+    function(df) {
+      df$x <- df$x + 0.5 * (mean(df$x) - df$x)
+      df$y <- df$y + 0.5 * (mean(df$y) - df$y)
+      df
+    }
+  )
+)
+datapoly$subid <- 1L
+holes$subid <- 2L
+datapoly <- rbind(datapoly, holes)
+# geom_pol
+p <- ggplot(datapoly, aes(x = x, y = y)) +
+  geom_polygon(aes(fill = value, group = id, subgroup = subid), 
+               rule = "evenodd")
+p + geom_point(aes(colour = as.factor(subid)))
+```
+
+## `geom_rect()`、`geom_raster()`和`geom_tile()`：绘制长方形
+
+- `aes()`必须参数：
+  - `geom_rect()`：**xmin**、**ymin**、**xmax**、**ymax**
+  - `geom_raster()`：**x**、**y**
+  - `geom_tile()`：**x**、**y**
+- **hjust**和**vjust**：在`geom_raster()`中确定长方形位置，"(0, 0)"为左下角，"(1, 1)"为右上角
+- **width**和**height**：在`geom_tile()`中确定长方形的宽(x轴长度)和高(y轴长度)
+- **linejoin**：不明
+- **interpolate**：不明
+- `geom_rect()`的可操作性最强；`geom_raster()`适合点距相同的图；`geom_tile()`的长方形大小一样，且点都在长方形正中间
+- `geom_raster()`和`geom_tile()`可通过`aes(fill)`在二维平面上描述三维数据
+
+```{r}
+fyc <- tibble(long = c(10, 12, 15), lat = c(10, 12, 15))
+seals$z <- sqrt(seals$long^2 + seals$lat^2)
+l <- ggplot(seals, aes(long, lat))
+```
+
+```{r}
+# geom_rect()
+ggplot(fyc) + 
+  geom_rect(
+    aes(xmin = long - 2, ymin = lat - 2, 
+        xmax = long + 2, ymax = lat + 2),
+    alpha = 0.5
+  ) +
+  geom_point(aes(long, lat), colour = "red")
+```
+
+```{r, warning=FALSE}
+# geom_raster()
+ggplot(fyc, aes(long, lat)) +
+  geom_raster(hjust = 1, vjust = 1, alpha = 0.5) +
+  geom_point(colour = "red")
+```
+
+```{r}
+# geom_tile()
+ggplot(fyc, aes(long, lat)) +
+  geom_tile(width = 4, height = 4, alpha = 0.5) +
+  geom_point(colour = "red")
+```
+
+```{r}
+# geom_raster() with aes(fill)
+l + geom_raster(
+  aes(fill = z), hjust = 0.5, vjust = 0.5, interpolate = TRUE
+)
+```
+
+```{r}
+# geom_tile() with aes(fill)
+l + geom_tile(aes(fill = z))
+```
+
+## `geom_ribbon()`和`geom_area()`：绘制区域
+
+- `aes()`必须参数：
+  - `geom_ribbon()`：**x**、**ymin**、**ymax**
+  - `geom_area()`：**x**、**y**
+- `geom_area()`就是**ymin**为0，**ymax**为**y**的`geom_ribbon()`
+
+```{r}
+a <- ggplot(economics, aes(date, unemploy))
+```
+
+```{r}
+# geom_ribbon()
+a + geom_ribbon(
+  aes(ymin = unemploy - 900, ymax = unemploy + 900)
+)
+```
+
+```{r}
+# geom_area()
+a + geom_area()
+```
+
+## `geom_abline()`、`geom_hline()`和`geom_vline()`：添加直线
+
+- `aes()`必须参数：
+  - `geom_abline()`：**intercept**、**slope**
+  - `geom_hline()`：**yintercept**
+  - `geom_vline()`：**xintercept**
+  
+```{r}
+ggplot() + 
+  geom_abline(aes(intercept = 0, slope = 1)) +
+  geom_hline(aes(yintercept = 1)) +
+  geom_vline(aes(xintercept = 1))
+```
+
+## `geom_label()`和`geom_text()`：添加标签、文本
+
+- `aes()`必须参数：**x**，**y**，**label**
+- **nudge_x**和**nudge_y**：偏移，向右向上为正，向左向下为负
+- **label.padding**：`geom_label()`背景的大小
+- **label.r**：`geom_label()`背景四个角的圆滑程度
+- **label.size**：`geom_label()`背景边缘线的粗细
+- **check_overlap**：`geom_text()`是否删除重叠的文本
+- `geom_label()`和`geom_text()`都是在每一个点上打标签，如果只是某个点的话考虑用`annotate()`
+
+```{r}
+fyc <- tibble(
+  long = c(10:13), lat = c(10:13), 
+  lb = c(NA, "FANG", "GONG", NA)
+  )
+```
+
+```{r, warning=FALSE}
+# geom_label() 
+ggplot(fyc, aes(long, lat)) + 
+  geom_label(
+    aes(label = lb), nudge_x = 0.3, nudge_y = 0.3,
+    label.padding = unit(0.5, "lines"),
+    label.r = unit(0.5, "lines"),
+    label.size = 0.5
+    ) +
+  geom_point()
+```
+
+```{r, warning=FALSE}
+# geom_text()
+ggplot(fyc, aes(long, lat)) + 
+  geom_text(aes(label = lb))
+```
+
+## `geom_jitter()`：绘制偏离原位置的点
+
+- `aes()`必须参数：**x**，**y**
+- **height**和**width**：偏离的范围，在水平方向可以向左或向右**width**的距离，在竖直方向可以向上或向下**height**的距离
+
+```{r}
+e <- ggplot(mpg, aes(cty, hwy))
+```
+
+```{r}
+# geom_jitter()
+e + geom_jitter(height = 2, width = 2) + 
+  geom_point(colour = "red")
+```
+
+## `geom_point()`：绘制散点图
+
+- `aes()`必须参数：**x**，**y**
+
+```{r}
+e <- ggplot(mpg, aes(cty, hwy))
+```
+
+```{r}
+# geom_point()
+e + geom_point()
+```
+
+## `geom_rug()`：在图的四周绘制点的一维投影
+
+- `aes()`必须参数：**x**，**y**
+- **outside**：是否投射在坐标轴外部
+- **sides**：投射方向，用"trbl"来代表"top"，"right"，"bottom"，"left"
+- **length**：描述投射位置的小短线的长度
+
+```{r}
+e <- ggplot(mpg, aes(cty, hwy))
+```
+
+```{r}
+# geom_rug()
+e + geom_rug(
+  outside = FALSE, sides = "tbl", length = unit(0.1, "npc")
+  )
+```
+
+## `geom_crossbar()`、`geom_errorbar()`、`geom_linerange()`和`geom_pointrange()`：绘制垂直的区间
+
+- `aes()`必须参数：**x**，**y**，**ymin**，**ymax**
+- **fatten**：中间那根线有多粗，数字越大越粗
+- `geom_crossbar()`是个日字，`geom_errorbar()`是个I字，`geom_linerange()`是一条线，`geom_pointrange()`是线中间有个点
+
+```{r}
+df <- tibble(grp = c("A", "B"), fit = 4:5, se = 1:2)
+j <- ggplot(df, aes(grp, fit, ymin = fit-se, ymax = fit+se))
+```
+
+```{r}
+# geom_crossbar()
+j + geom_crossbar(fatten = 2)
+```
+
+```{r}
+# geom_errorbar()
+j + geom_errorbar()
+```
+
+```{r}
+# geom_linerange()
+j + geom_linerange()
+```
+
+```{r}
+# geom_pointrange()
+j + geom_pointrange()
+```
+
+## `geom_map()`：绘制地图
+
+```{r, message=FALSE}
+data <- data.frame(
+  murder = USArrests$Murder,
+  state = tolower(rownames(USArrests))
+)
+map <- map_data("state")
+k <- ggplot(data, aes(fill = murder))
+```
+
+```{r}
+# geom_map()
+k + geom_map(aes(map_id = state), map = map) +
+  expand_limits(x = map$long, y = map$lat)
+```
+
+## `geom_spoke()`：（待补全）
+
+- `aes()`必须参数：**x**、**y**、**angle**、**radius**
+
+```{r}
+b <- ggplot(seals, aes(x = long, y = lat))
+```
+
+```{r}
+b + geom_spoke(aes(angle = 1:1155, radius = 1))
+```
+
+## `geom_dotplot()`：点阵图（待补全）
+
+- `aes()`必须参数：**x**，**y(count, ncount)**
+
+```{r}
+c <- ggplot(mpg, aes(hwy))
+```
+
+```{r message=FALSE}
+c + geom_dotplot()
+```
+
+# Scales
+
+## `scale_*_continuous()`：对连续型数据的坐标轴进行修改
+
+- <SCALE_FUNCTION>不会改变数据，仅仅改变坐标轴的结构，如线的密度、顺序等
+- **name**：坐标轴名称
+- **breaks**：坐标轴主要刻度线，可以为一个向量，也可以是一个函数，函数将**limits**作为输入，输出一个向量作为**breaks**，需要注意如果使用函数输出结果貌似会受到**expand**参数的影响，具体影响不明
+- **minor_breaks**：坐标轴次要刻度线，具体同**breaks**
+- **labels**：坐标轴各个**break**点的labels，可以为一个向量，也可以是一个函数，函数将**breaks**作为输入，输出一个向量作为**labels**
+- **limits**：坐标轴范围，可以是一个长度为2的向量，也可以是一个函数，当前默认的的**limits**作为输入，输出新的**limits**
+- **expand**：对当前的坐标轴进行一定程度扩充，用`expand_scale()`对其进行赋值
+  - **mult**：上下（左右）各增加当前**limits**的**mult**倍
+  - **add**：上下（左右）各增加**add**长度的坐标轴
+- **oob**：不明
+- **trans**：直接对坐标轴进行变换，有"asn", "atanh", "boxcox", "date", "exp", "hms", "identity", "log", "log10", "log1p", "log2", "logit", "modulus", "probability", "probit", "pseudo_log", "reciprocal", "reverse", "sqrt" 和 "time"
+- **position**：坐标轴位置，"left"，"right"，"bottom"或"right"
+- **sec.axis**：增加副坐标轴，用`sec.axis()`对其进行赋值
+  - **trans**：一个对主坐标进行变换的公式
+  - **name**：名称
+  - **breaks**：主要刻度线
+  - **labels**：标签
+- `scale_*_log10()`，`scale_*_reverse()`，`scale_x_sqrt()`提供了三种常见变换的简写
+- 通过调整数据和**sec.axis**可以实现excel中的双坐标轴
+
+```{r}
+# scale_*_continuous()
+fyc <- tibble(
+  Month = c(1:12), 
+  Sales = sample(1:12),
+  CumSales = cumsum(Sales)
+)
+ggplot(fyc, aes(Month, Sales)) +
+  geom_col(fill = "blue", alpha = 0.3) +
+  geom_path(aes(Month, CumSales/5), colour = "darkgreen") +
+  geom_point(aes(Month, CumSales/5), colour = "darkgreen") +
+  scale_y_continuous(
+    breaks = seq(0, 16, 4), minor_breaks = seq(0, 16, 2),
+    expand = expand_scale(mult = 0, add = 0.5), limits = c(0, 16),
+    sec.axis = sec_axis(trans = ~ 5*., name = "CumSales")
+    ) +
+  scale_x_continuous(
+    breaks = c(1:12), minor_breaks = NULL
+  )
+```
+
+```{r}
+# scale_*_log10()
+fyc <- tibble(long = 10^(1:10), lat = 1:10)
+ggplot(fyc, aes(long, lat)) +
+  geom_point() +
+  scale_x_log10()
+```
+
+```{r}
+# scale_*_reverse()
+fyc <- tibble(long = 10:1, lat = 1:10)
+ggplot(fyc, aes(long, lat)) +
+  geom_point() +
+  scale_y_reverse()
+```
+
+```{r}
+# scale_*_sqrt()
+fyc <- tibble(long = (1:10)^2, lat = 1:10)
+ggplot(fyc, aes(long, lat)) +
+  geom_point() +
+  scale_x_sqrt()
+```
+
+## `scale_*_discrete()`：对离散型数据的坐标轴进行修改
+
+- **palette**：不明
+- **breaks**：用超出数据范围的值来赋值貌似没有意义，当赋的值正好是目前有的值的时候才会显示在坐标轴上
+- **limits**：限定坐标轴上得值以及值的顺序
+- **drop**：离散数据是factor时，是否舍弃不存在数据的因子
+- **na.translate**：是否保留NA
+- **na.value**：不明
+- **aesthetics**：不明
+- **scale_name**：不明
+- **name**：坐标轴名称
+- **labels**：给每个**breaks**设定坐标轴上的**labels**
+- **expand**：对当前的坐标轴进行一定程度扩充，用`expand_scale()`对其进行赋值
+  - **mult**：上下（左右）各增加当前**limits**的**mult**倍
+  - **add**：上下（左右）各增加**add**长度的坐标轴
+  
+```{r}
+fyc <- tibble(
+  Month = rep(c("Q1", "Q2", "Q3", NA), each = 30),
+  Sales = sample(1:120)
+)
+ggplot(fyc, aes(Month, Sales)) +
+  geom_boxplot() +
+  scale_x_discrete(
+    drop = FALSE
+  )
+```
+
+## `scale_*_date()`、`scale_*_datetime()`和`scale_*_time()`：对时间序列数据的坐标轴进行修改（待补全）
+
+- **name**：
+- **breaks**：
+- **date_breaks**：
+- **labels**：
+- **date_labels**：
+- **minor_breaks**：
+- **date_minor_breaks**：
+- **limits**：
+- **expand**：
+- **position**：
+- **sec.axis**：
+- **timezone**：
+- **oob**：
+- **na.value**：
+- 总体上与`scale_*_continuous()`类似，但是每个参数多了一个对应的**data_***参数，可通过一个字符串来表示时间
+
+## `scale_*_brewer()`：离散的颜色或填充
+
+- **name**、**limits**、**breaks**、**labels**
+- **type**："seq"(sequential)，"div"(diverging)，"qual"(qualitative)
+- **palette**：调色板，用数字或字符串赋值
+- **direction**：从**palette**中选取颜色1表示正向，-1表示反向
+
+```{r}
+fyc <- tibble(
+  Season = sample(c("Q1", "Q2", "Q3"), 1000, replace = TRUE),
+  Sales = rnorm(1000)
+)
+# scale_fill_brewer()
+ggplot(fyc, aes(Sales)) +
+  geom_histogram(aes(fill = Season), binwidth = 0.1) + 
+  scale_fill_brewer(
+    type = "seq",
+    palette = 1,
+    direction = -1
+  )
+```
+
+```{r}
+# scale_color_brewer()
+fyc <- tibble(
+  Area = sample(c("east", "west", "north"), 1000, replace = TRUE),
+  long = rnorm(1000), lat = rnorm(1000)
+)
+ggplot(fyc, aes(long, lat)) +
+  geom_point(aes(colour = Area)) + 
+  scale_color_brewer(
+    type = "div",
+    palette = 1,
+    direction = -1
+  )
+```
+
+## `scale_*_distiller()`：连续的颜色或填充（待补全）
+
+- **name**、**limits**、**breaks**、**labels**
+- **type**："seq"(sequential)，"div"(diverging)，"qual"(qualitative)
+- **palette**：调色板，用数字或字符串赋值
+- **direction**：从**palette**中选取颜色1表示正向，-1表示反向
+
+```{r}
+fyc <- tibble(
+  long = rep(1:20, 20), lat = rep(1:20, each = 20),
+  square = sqrt(long^2 + lat^2)
+)
+ggplot(fyc, aes(long, lat)) +
+  geom_tile(aes(fill = square)) +
+  scale_fill_distiller(
+    type = "seq",
+    direction = 1
+  )
+```
+
+## `scale_fill_grey()`：
+```{r}
+n + scale_fill_grey(start = 0.2, end = 0.8, na.value = "red")
+```
+
+
+```{r}
+o <- c + geom_dotplot(aes(fill = ..x..))
+```
+
+## `scale_fill_distiller()`：
+```{r, message=FALSE}
+o + scale_fill_distiller(palette = "Blues")
+```
+
+## `scale_fill_gradient()`：
+```{r, message=FALSE}
+o + scale_fill_gradient(low = "red", high = "yellow")
+```
+
+## `scale_fill_gradient2()`：
+```{r, message=FALSE}
+o + scale_fill_gradient2(
+  low = "red", high = "blue",mid = "white", midpoint = 25
+)
+```
+
+## `scale_fill_gradientn()`：
+```{r, message=FALSE}
+o + scale_fill_gradientn(colours = topo.colors(6))
+```
+
+
+```{r}
+p <- e + geom_point(aes(shape = fl, size = cyl))
+```
+
+## `scale_shape_manual()`：
+```{r}
+p + scale_shape_manual(values = c(3:7))
+```
+
+## `scale_radius()`：
+```{r}
+p + scale_radius(range = c(1, 6))
+```
+
+## `scale_size_area()`：
+```{r}
+p + scale_size_area(max_size = 6)
+```
+
+# Coordinate Systems
+
+```{r}
+r <- d + geom_bar()
+```
+
+## `coord_cartesian()`：更改笛卡尔坐标系的显示范围
+
+- `coord_cartesian()`的作用是显示图的某一部分，并不会减少使用的数据
+- **xlim**，**ylim**：控制x轴和y轴的范围
+
+```{r}
+r + coord_cartesian(xlim = c(0, 5))
+```
+
+## `coord_fixed()`：更改x轴和y轴的坐标比例
+
+- **ratio**：同样的值在坐标轴上的长度y/x等于**ratio**
+- **xlim**，**ylim**：控制x轴和y轴的范围
+
+```{r}
+r + coord_fixed(ratio = 1/30)
+```
+
+## `coord_flip()`：翻转坐标轴
+
+- **xlim**，**ylim**：控制x轴和y轴的范围
+
+```{r}
+r + coord_flip()
+```
+
+## `coord_polar()`：将笛卡尔坐标转换成极坐标
+
+- **theta**：选择哪个轴变为极坐标的**theta**
+- **start**：弧度，一圆周为2*pi弧度
+- **direction**：1为顺时针，-1为逆时针
+
+```{r}
+fyc <- tibble(long = rep(1:5, c(1:5)), lat = 1)
+ggplot(fyc, aes(long, lat)) +
+  geom_col() +
+  coord_polar(theta = "x", start = pi, direction = -1)
+```
+
+## `coord_trans()`：进行坐标变换
+
+```{r}
+fyc <- data.frame(long = 1:10, lat = (1:10)^2)
+fyc <- ggplot(fyc, aes(long, lat)) + geom_point()
+```
+
+```{r}
+fyc + scale_y_sqrt()
+fyc + coord_trans(y = "sqrt")
+```
+
+# Position Adjustments
+
+```{r}
+s <- ggplot(mpg, aes(fl, fill = drv))
+```
+
+## `position = "dodge"`：
+```{r}
+s + geom_bar(position = "dodge")
+```
+
+## `position = "fill"`：
+```{r}
+s + geom_bar(position = "fill")
+```
+
+## `position = "jitter"`：
+```{r}
+e + geom_point(position = "jitter")
+```
+
+## `position = "nudge"`：
+```{r, eval=FALSE}
+# NOT RUN
+e + geom_label(position = "nudge")
+```
+
+## `position = "stack"`：
+```{r}
+s + geom_bar(position = "stack")
+```
+
+# Themes
+
+## `theme_bw()`：
+```{r}
+r + theme_bw()
+```
+
+## `theme_gray()`：
+```{r}
+r + theme_gray()
+```
+
+## `theme_dark()`：
+```{r}
+r + theme_dark()
+```
+
+## `theme_classic()`：
+```{r}
+r + theme_classic()
+```
+
+## `theme_light()`：
+```{r}
+r + theme_light()
+```
+
+## `theme_linedraw()`：
+```{r}
+r + theme_linedraw()
+```
+
+## `theme_minimal()`：
+```{r}
+r + theme_minimal()
+```
+
+## `theme_void()`：
+```{r}
+r + theme_void()
+```
+
+# Faceting
+
+```{r}
+t <- ggplot(mpg, aes(cty, hwy)) + geom_point()
+```
+
+## `facet_grid()`：
+```{r}
+t + facet_grid(cols = vars(fl))
+t + facet_grid(rows = vars(year))
+t + facet_grid(rows = vars(year), cols = vars(fl))
+```
+
+## `facet_wrap()`：
+```{r}
+t + facet_wrap(vars(fl))
+```
+
+# Labels
+
+## `labs()`：
+```{r}
+t + labs(
+  x = "New x axis label", 
+  y = "New y axis label",
+  title = "Add a title above the plot",
+  subtitle = "Add a subtitle below title",
+  caption = "Add a caption below plot"
+)
+```
+
+## `annotate()`：
+```{r}
+t + annotate(geom = "text", x = 12, y = 9,
+             label = "This is annotate")
+```
+
+# Legends
+
+## `theme()`：
+```{r}
+n + theme(legend.position = "bottom")
+```
+
+## `guides()`：
+```{r}
+#n + guides(fill = "none")
+```
+
+## `scale_fill_discrete()`：
+```{r}
+n + scale_fill_discrete(
+  name = "Title",
+  labels = c("A", "B", "C", "D", "E")
+)
+```
+
+# Zooming
+
+## Without Clipping：
+```{r}
+t + coord_cartesian(xlim = c(0, 100), ylim = c(0, 100))
+```
+
+## With Clipping：
+```{r}
+t + xlim(0, 100) + ylim(10, 20)
+```
+
+```{r}
+t + scale_x_continuous(limits = c(0, 100)) +
+  scale_y_continuous(limits = c(10, 20))
+```
+
+
+
+
+

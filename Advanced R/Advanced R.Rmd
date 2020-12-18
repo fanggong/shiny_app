@@ -1,0 +1,200 @@
+---
+title: "Advanced R学习笔记"
+author: "Fang Yongchao"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
+    number_section: true
+  runtime: shiny
+---
+
+# 面向对象编程
+
+- `pryr::otype()`：检查对象类型
+- `pryr::ftype()`：检查函数类型
+
+## 基础类型
+
+- 最常见的基础类型就是**向量**和**列表**
+- 同时基础类型还包括**函数**、**环境**和**其他更独特的对象**
+
+## S3
+
+- 目前使用的大部分对象都是S3对象
+- 在S3中，**方法**是一个**泛型函数**，一个**泛型函数**会有多个**方法**，可以用`methods()`来查看**泛型函数**的**方法**
+- S3并不需要一个正式的类定义，需要的仅仅是一个构造函数
+
+```{r, message=FALSE}
+# data.frame是一个S3对象
+df <- data.frame(x = 1:3, y = 4:6)
+pryr::otype(df)
+# mean()是一个泛型函数
+pryr::ftype(mean)
+# mean.Date()是一个方法
+pryr::ftype(mean.Date)
+# 查看mean的所有方法
+methods(mean)
+```
+
+### 定义类和创建对象
+
+```{r}
+# 构造函数
+student <- function(name, age) {
+  if(!is.character(name)) stop("name must be character")
+  if(!is.numeric(age)) stop("age mest be numeric")
+  structure(list(name = name, age = age), class = "student")
+}
+# 创建对象
+me <- student(name = "fang yongchao", age = 28)
+```
+
+### 创建新的泛型函数
+
+```{r}
+introduce <- function(x) UseMethod("introduce")
+pryr::ftype(introduce)
+```
+
+### 创建新的方法
+
+```{r}
+# 针对student对象的方法
+introduce.student <- function(student) {
+  return(paste0(
+    "My name is ", student$name, ", I'm ", student$age, "!"
+  ))
+}
+introduce(me)
+# 针对未知类对象的方法
+introduce.default <- function(default) {
+  return(paste0(
+    "Not a student, Can not introduce"
+  ))
+}
+introduce(c(1:3))
+```
+
+## S4
+
+- 与S3相比，S4更加正式和严谨，根据惯例S4的类名使用开头字母大写的驼峰写法
+- 有描述字段**field**和继承关系结构的正式定义：通过**contains**参数来实现继承
+- 使用运算符**\@**从S4对象中提取字段**slot**
+- 如果一个S4对象继承自一个S3类或一个基础类型，它就包含一个特殊的**.Data**字段，这个字段包含底层基础类型或S3对象
+
+### 定义类和创建对象
+
+```{r}
+# 定义类，Member继承了Person
+setClass(
+  "Person",
+  slots = list(name = "character", age = "numeric")
+)
+setClass(
+  "Member",
+  slots = list(group = "numeric", leader = "Person"),
+  contains = "Person"
+)
+# 创建对象
+myleader <- new("Person", name = "Gong Yufang", age = 27)
+me <- new("Member", leader = myleader, group = 1,
+          name = "Fang Yongchao", age = 28)
+```
+
+### 创建新的泛型函数
+
+```{r}
+setGeneric(
+  "introduce",
+  function(x) {
+    standardGeneric("introduce")
+  }
+)
+```
+
+### 创建新的方法
+
+```{r}
+setMethod(
+  "introduce",
+  c(x = "Person"),
+  function(x) {
+    return(paste0(
+      "My name is ", x@name, ", I'm ", x@age, "!"
+    ))
+  }
+)
+introduce(myleader)
+introduce(me)
+```
+
+## RC
+
+- RC的方法是一个对象，而不是一个函数
+- RC的对象是可变的，不是通常的复制后修改，感觉比较像指针
+- 使用运算符**$**从RC对象中提取字段
+- **下方的例子提供了另一种定义S4类和创建S4对象的语法**
+- RC跟python很像，但是用**$**代替**.**
+
+### 定义类和创建对象
+
+```{r}
+newAccount <- setRefClass(
+  "Account",
+  fields = list(balance = "numeric")
+)
+me <- newAccount$new(balance = 100)
+```
+
+```{r}
+# 对象并不是复制后修改
+him <- me
+me$balance <- 200
+him$balance
+```
+
+```{r}
+# 通过copy()实现复制后修改
+her <- me$copy()
+me$balance <- 100
+her$balance
+```
+
+### 定义类的同时定义方法
+
+```{r}
+newAccount <- setRefClass(
+  "Account",
+  fields = list(balance = "numeric"),
+  methods = list(
+    withdrow = function(x) {
+      balance <<- balance - x
+    },
+    deposit = function(x) {
+      balance <<- balance + x
+    }
+  )
+)
+me <- newAccount$new(balance = 100)
+```
+
+```{r}
+# 取100块钱
+me$withdrow(100)
+me$balance
+```
+
+```{r}
+# 存200块钱
+me$deposit(200)
+me$balance
+```
+
+# 环境
+
+##

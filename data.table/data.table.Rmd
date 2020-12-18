@@ -1,0 +1,223 @@
+---
+title: "data.table包学习笔记"
+author: "Fang Yongchao"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
+    number_section: true
+  runtime: shiny
+---
+
+```{r PACKAGES, echo=FALSE, message=FALSE, warning=FALSE}
+library(data.table)
+library(nycflights13)
+library(dplyr)
+```
+
+# fread（待补全）
+
+# Basics
+
+```{r}
+flights <- setDT(copy(flights)) %>% 
+  select(month, day, dep_delay, arr_delay, origin, dest)
+```
+
+## 通过**i**实现where
+
+```{r}
+flights[origin == "JFK" & month == 6]
+```
+
+## 通过**i**实现order by
+
+```{r}
+flights[order(month, desc(day))]
+```
+
+## 通过**j**实现select
+
+- **j**可以是一个list，list中元素是列名的引用，可用`.()`代替`list()`
+- **j**可以是一个字符串向量，向量元素是列名的字符串
+- **j**可以是一个值为字符串向量的变量，需要在变量前加`..`，或者将**with**参数设为"FALSE"
+
+```{r}
+flights[, .(dep_delay, arr_delay)]
+```
+
+```{r}
+flights[, c("dep_delay", "arr_delay")]
+```
+
+```{r}
+vars <- c("dep_delay", "arr_delay")
+flights[, ..vars]
+```
+
+```{r}
+vars <- c("dep_delay", "arr_delay")
+flights[, vars, with = FALSE]
+```
+
+## 通过**j**实现重命名
+
+```{r}
+flights[, .(delay_arr = arr_delay, delay_dep = dep_delay)]
+```
+
+## 通过**j**实现计算一些统计值
+
+```{r}
+flights[, sum((arr_delay + dep_delay) < 0, na.rm = TRUE)]
+```
+
+```{r}
+flights[, length(arr_delay)]
+# 直接用 .N 计数
+flights[, .N]
+```
+
+## 通过**j**实现新增、修改、删除列
+
+```{r, warning=FALSE}
+# 新增
+flights[, `:=`(hour = 0)][order(month)]
+# 修改
+flights[month == 1, `:=`(hour = 1)][order(month)]
+# 删除
+flights[, `:=`(hour = NULL)][order(month)]
+```
+
+# Aggregations
+
+## 通过**by**实现group by
+
+```{r}
+flights[, .(.N, sum(arr_delay, na.rm = TRUE)), 
+        by = .(origin, dest)]
+```
+
+## 通过**keyby**实现group by并sort
+
+```{r}
+flights[, .(.N, sum(arr_delay, na.rm = TRUE)), 
+        keyby = .(origin, month, dest)]
+```
+
+## 通过**.SD**对**by**之后的其它列进行操作
+
+- **.SD**默认除了**by**之外的其它所有列
+- 通过**.SDcols**来进一步选择需要操作的列
+
+```{r}
+flights[, lapply(.SD, mean, na.rm = TRUE),  by = .(origin, dest),
+        .SDcols = c("dep_delay", "arr_delay")]
+```
+
+# Keys
+
+## 通过`setkey()`简化对**i**的操作
+
+```{r}
+setkey(flights, origin, dest)
+flights[.(c("JFK", "EWR"), "MIA")]
+```
+
+```{r}
+setkey(flights, origin, dest)
+flights[.(unique(origin), "MIA")]
+```
+
+## 通过**keyby**在group by的同时`setkey()`
+
+```{r}
+ans <- flights["JFK", max(dep_delay), keyby = month]
+key(ans)
+```
+
+## 通过**mult**、**nomatch**等参数选择返回的行
+
+```{r}
+setkey(flights, origin, dest)
+# 第一行
+flights[.("JFK", "MIA"), mult = "first"]
+# 最后一行
+flights[.(c("LGA", "JFK", "EWR"), "XNA"), mult = "last"]
+# 不显示无匹配的行
+flights[.(c("LGA", "JFK", "EWR"), "XNA"), mult = "last", 
+        nomatch = NULL]
+```
+
+# Tidy data
+
+```{r}
+s1 <- "family_id age_mother dob_child1 dob_child2 dob_child3
+1         30 1998-11-26 2000-01-29         NA
+2         27 1996-06-22         NA         NA
+3         26 2002-07-11 2004-04-05 2007-09-02
+4         32 2004-10-10 2009-08-27 2012-07-21
+5         29 2000-12-05 2005-02-28         NA"
+DT <- fread(s1)
+DT
+```
+
+## 通过`melt()`将宽数据变成长数据 
+
+```{r}
+DT.m1 <- melt(DT, id.vars = c("family_id", "age_mother"),
+              measure.vars = paste0("dob_child", 1:3),
+              variable.name = "child", value.name = "dob")
+DT.m1
+```
+
+## 通过`dcast()`将长数据变成宽数据
+
+```{r}
+dcast(DT.m1, family_id + age_mother ~ child, value.var = "dob")
+```
+
+## `melt()`和`dcast()`的局限性及解决方法
+
+```{r}
+# 变量名有两种类型
+DT <- data.table(
+  family_id = 1:5,
+  dob_child1 = paste0("2019-09-0", 1:5),
+  dob_child2 = paste0("2020-07-0", 6:10),
+  gender_child1 = sample(0:1, 5, TRUE),
+  gender_child2 = sample(0:1, 5, TRUE)
+)
+DT
+```
+
+```{r}
+# 解决方案一：低效
+DT.m1 <- melt(DT, id = c("family_id"))
+DT.m1[, c("variable", "child") := 
+        tstrsplit(variable, "_", fixed = TRUE)][]
+DT.c1 <- dcast(DT.m1, family_id + child ~ variable, 
+               value.var = "value")
+DT.c1
+```
+
+```{r}
+# 解决方案二
+colA <- paste0("dob_child", 1:2)
+colB <- paste0("gender_child", 1:2)
+DT.m2 <- melt(DT, measure.vars = list(colA, colB),
+              value.name = c("dob", "gender"))
+DT.m2
+```
+
+```{r}
+# 同理使用dcast()
+DT.c2 <- dcast(DT.m2, family_id ~ variable, value.var = c("dob", "gender"))
+DT.c2
+```
+
+

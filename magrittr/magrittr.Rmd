@@ -1,0 +1,73 @@
+---
+title: "magrittr包学习笔记"
+author: "Fang Yongchao"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
+    number_section: true
+  runtime: shiny
+---
+```{r message=FALSE, warning=FALSE, include=FALSE}
+library(magrittr)
+```
+
+# %>% 
+
+- 最常见的管道符，默认左边的返回值会作为右边函数的第一个参数
+- 当左边返回值作为右边的非第一个参数时，使用**.**作为占位符
+- 当右边的函数只有唯一参数的时候，可以不写括号只写函数名
+- 右边的函数可以没有函数名，将函数主体写在大括号中就好
+
+```{r}
+c(1:10) %>% sum
+```
+
+```{r}
+2 %>% matrix(rnorm(10), nrow = .)
+```
+
+```{r}
+5 %>% 
+  {
+    if (. > 3) print("大于3!")
+    else print("小于等于3!")
+  }
+```
+
+# %T>%
+
+- 基本功能与**%>%**相同
+- 在下一步中使用**%T>%**左侧函数的返回值，即**%T>%**右侧函数的操作不会体现在下一步中
+- 其右边的函数常为无返回值的函数
+
+```{r}
+data <- data.frame(x = 1:3, y = 4:6)
+data %T>% `colnames<-`(c("M", "N")) %>% colnames
+```
+
+# %$%
+
+- 功能类似于`with()`
+
+```{r}
+data.frame(x = rep(c("A", "B"), 5), y = 1:10) %$%
+  aggregate(y, list(x), sum) %>% 
+  `names<-`(c("x", "value"))
+```
+
+# %<>%
+
+- 在**%>%**的基础上加上了赋值功能
+- **%<>%**左边的不能是一个不存在的对象
+
+```{r}
+data <- data.frame(x = 1:3, y = 4:6)
+colnames(data) %<>% rev
+data
+```
+
