@@ -4,6 +4,8 @@ author: "Fang Yongchao"
 date: "2020-12-19"
 output:
   html_document:
+    theme: journal
+    highlight: zenburn
     toc: true
     toc_depth: 3
     toc_float:
@@ -217,7 +219,7 @@ str_count(string, phone)
 str_count(string, "")
 ```
 
-## `str_locate()`和`str_locate_all()`
+## `str_locate()`
 返回 **pattern** 在字符串中的位置, `str_locate()`仅返回第一个，返回matrix
 ```{r}
 str_locate(string, phone)
@@ -240,7 +242,7 @@ str_locate_all(string, phone)
 gregexpr(phone, string)
 ```
 
-## `str_extract()`和`str_extract_all()`
+## `str_extract()`
 提取字符串中满足 **pattern** 的部分，`str_extract()`仅返回第一个，返回vector
 ```{r}
 str_extract(string, phone)
@@ -254,7 +256,7 @@ base R中需要将`regexpr()`和`gregexpr()`配合`rematches()`使用
 regmatches(string, regexpr(phone, string))
 regmatches(string, gregexpr(phone, string))
 ```
-## `str_match()`和`str_match_all()`
+## `str_match()`
 在extract的基础上，提取**pattern**中用小括号选取的部分
 ```{r}
 str_match(string, phone)
@@ -268,7 +270,7 @@ base R中使用`regexec()`配合`rematches()`使用，但是只能取出第一�
 regmatches(string, regexec(phone, string))
 ```
 
-## `str_replace()`和`str_replace_all()`
+## `str_replace()`
 将字符串中满足 **pattern** 的部分替换
 ```{r}
 str_replace(string, phone, "XXX-XXX-XXXX")
