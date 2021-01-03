@@ -18,9 +18,7 @@ output:
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 knitr::opts_chunk$set(warning = FALSE)
 library(stringr)
-library(microbenchmark)
 library(shiny)
-options(digits = 2)
 ```
 
 --------------------------
@@ -295,38 +293,4 @@ strsplit(c("a-b.c", "x-y"), "[-.]")
 ------------------------------
 
 # base R与`stringr`的性能比较
-base R中的字符串处理函数大部分是在调用R的内部函数，`stringr`是调用C函数。先试着比较最简单的`str_length()`和`nchar()`。可以发现数据较大的情况下明显`stringr`性能领先于base R
-```{r}
-for (i in 1:7) {
-  assign(paste0("str_", i), as.character(sample(999, 10^i, replace = TRUE)))
-}
-microbenchmark(
-  str_length(str_1), nchar(str_1), str_length(str_2), nchar(str_2),
-  str_length(str_3), nchar(str_3), str_length(str_4), nchar(str_4),
-  str_length(str_5), nchar(str_5), str_length(str_6),nchar(str_6),
-  times = 1
-)
-```
-再尝试一下比较常用的正则匹配，数据较大的情况下`stringr`性能依旧领先于base R
-```{r}
-for (i in 1:6) {
-  assign(
-    paste0("stringr_", i), 
-    paste0('str_replace_all(str_', i, ', "[0-3]", replacement = "X")')
-  )
-  assign(
-    paste0("baser_", i), 
-    paste0('gsub("[0-3]", "X", str_', i, ')')
-  )
-}
-microbenchmark(
-  eval(parse(text = stringr_1)), eval(parse(text = baser_1)),
-  eval(parse(text = stringr_2)), eval(parse(text = baser_2)),
-  eval(parse(text = stringr_3)), eval(parse(text = baser_3)),
-  eval(parse(text = stringr_4)), eval(parse(text = baser_4)),
-  eval(parse(text = stringr_5)), eval(parse(text = baser_5)),
-  eval(parse(text = stringr_6)), eval(parse(text = baser_6)),
-  times = 1
-)
-```
-对于剩余函数用同样方法比较，结论基本相同
+base R中的字符串处理函数大部分是在调用R的内部函数，`stringr`是调用C函数。性能测试的结果在不同的环境，不同的数据集下有很大差距，解释其原理有些超出了我的知识范畴。所以个人认为在一个新的环境下或数据集下，可以先使用**microbenchmark**包做一些简单测试，之后选择在当前环境下性能更优的处理方法。
