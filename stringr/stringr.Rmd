@@ -1,5 +1,5 @@
 ---
-title: "字符串操作"
+title: "数据处理之字符串操作"
 author: "Fang Yongchao"
 date: "2020-12-19"
 output:
@@ -12,7 +12,6 @@ output:
       collapsed: false
       smooth_scroll: false
     number_section: true
-  runtime: shiny
 ---
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
@@ -22,7 +21,7 @@ library(shiny)
 ```
 
 --------------------------
-
+    
 # 摘要
 关于R中的字符串操作，用的最多的毫无疑问是`tidyverse`中的`stringr`包，
 `stringr`包主要包含四种类型的函数：
@@ -293,4 +292,4 @@ strsplit(c("a-b.c", "x-y"), "[-.]")
 ------------------------------
 
 # base R与`stringr`的性能比较
-base R中的字符串处理函数大部分是在调用R的内部函数，`stringr`是调用C函数。性能测试的结果在不同的环境，不同的数据集下有很大差距，解释其原理有些超出了我的知识范畴。所以个人认为在一个新的环境下或数据集下，可以先使用`microbenchmark`包做一些简单测试，之后选择在当前环境下性能更优的处理方法。
+base R中的字符串处理函数大部分是在调用R的内部函数，`stringr`是调用C函数。性能测试的结果在不同的环境，不同的数据集下有很大差距，解释其原理有些超出了我的知识范畴。所以在一个新的环境或数据集下，可以先使用`microbenchmark`包做一些简单测试，之后选择在当前环境下性能更优的处理方法。
