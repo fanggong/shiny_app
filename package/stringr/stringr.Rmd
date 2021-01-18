@@ -1,0 +1,295 @@
+---
+title: "数据处理之字符串操作"
+author: "Fang Yongchao"
+date: "2020-12-19"
+output:
+  html_document:
+    theme: journal
+    highlight: zenburn
+    toc: true
+    toc_depth: 3
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
+    number_section: true
+---
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(warning = FALSE)
+library(stringr)
+library(shiny)
+```
+
+--------------------------
+    
+# 摘要
+关于R中的字符串操作，用的最多的毫无疑问是`tidyverse`中的`stringr`包，
+`stringr`包主要包含四种类型的函数：
+
+- 对单个字符串中的字符的操作
+- 对空格的增加、删除或其他操作
+- locale sensitive：可以理解为针对不同语言输出会不一样的函数
+- pattern 匹配函数：支持四种不同的匹配模式，最常用的还是正则表达式
+
+对应地，base R中也有相对应的函数达到同样的效果。base R中字符串操作函数的性能在数据较大情况下普遍不如`stringr`
+
+------------------------------
+
+# 对单个字符串进行操作
+此类函数对单个字符串进行操作，由于每个函数都已被向量化，故可以直接以字符串向量为参数
+
+## `str_length()`
+返回字符串长度
+```{r}
+str_length(c("fang", "方", NA_character_))
+```
+base R中使用`nchar()`函数
+```{r}
+nchar(c("fang", "方", NA_character_))
+```
+
+## `str_sub()`
+返回和替换字符串子串
+```{r}
+string <- c("fang yongchao", "stringr")
+str_sub(string, start = 1, end = 4)
+str_sub(string, start = 1, end = 4) <- "????"
+string
+```
+base R中使用`substr()`或`substring()`函数
+```{r}
+string <- c("fang yongchao", "stringr")
+substr(string, start = 1, stop = 4)
+substring(string, first = 1, last = 4)
+substring(string, first = 1, last = 4) <- "????"
+string
+```
+
+## `str_dup()`
+复制字符串
+```{r}
+str_dup(c("fang", "yong", "chao"), 3)
+```
+base R中可以使用`strrep()`和`paste()`函数
+```{r}
+strrep(c("fang", "yong", "chao"), 3)
+```
+
+## `str_c()`和`str_flatten()`
+连接字符串
+```{r}
+str_c("fang", " ", "yong", "chao")
+str_flatten(c("fang", "yong", "chao"), collapse = " ")
+```
+base R中使用`paste()`函数，`str_c()`与`paste()`具有完全一样的功能，区别在于`str_c()`中 **sep** 参数的默认值为空字符串，`paste()`中 **sep** 参数的默认值为空格。`str_flatten()`是一个没有 **sep** 参数的`paste()`
+```{r}
+paste("fang", " ", "yong", "chao", sep = "")
+paste(c("fang", "yong", "chao"), collapse = " ")
+```
+
+------------------------------
+
+# 对空格进行操作
+
+此类函数包含增加、删除、修改空格三个函数
+
+## `str_pad()`
+通过添加字符改变字符串长度，添加空格的方向可为left、right或both
+```{r}
+str_pad("fang yongchao", 20, "right")
+```
+base R中可以使用`format()`函数
+```{r}
+format("fang yongchao", width = 20, justify = "left")
+```
+
+## `str_trunc()`
+将字符串变短，用...代替删除部分，变短方向可为left、right、center。base R中不确认是否有相同功能函数
+```{r}
+str_trunc("fang yongchao", 10, "right")
+```
+
+## `str_trim()`
+删除字符串两侧多余空格，删除方向left、right或both。base R中不确认是否有相同功能函数
+```{r}
+str_trim("fang yongchao    ", "right")
+```
+
+------------------------------
+
+# locale sensitive
+此类函数都包含一个 **locale** 参数，对于不同的语言返回结果不同,默认是英语
+
+## `str_to_title()`
+转换成标题，即单词首字母大写
+```{r}
+str_to_title("fang yongchao")
+```
+
+## `str_to_upper()`
+转换成大写
+```{r}
+str_to_upper("I like fang yongchao")
+```
+base R中使用`toupper()`
+```{r}
+toupper("fang yongchao")
+```
+
+## `str_to_lower()`
+转换成小写
+```{r}
+str_to_lower("I like horses")
+```
+换一种语言，小写不一样了
+```{r}
+str_to_lower("I like horses", locale = "tr")
+```
+base R中使用`tolower()`
+```{r}
+tolower("FANG YONGCHAO")
+```
+
+## `str_order()`和`str_sort()`
+排序，逻辑和功能都等同于base R中的`order()`和`sort()`
+```{r}
+str_order(c("y", "i", "k"))
+str_sort(c("y", "i", "k"))
+```
+`stringr`和base R的排序函数的区别在于，`stringr`可以换一种语言，排序结果就改变
+```{r}
+str_sort(c("y", "i", "k"), locale = "lt")
+```
+
+------------------------------
+
+# pattern 匹配
+此类函数包含`detect()`、`locate()`、`extract()`、`match()`、`replace()`、`split()`六个函数，这六个函数的前两个参数均为要进行操作的 **string** 和进行匹配用的 **pattern**
+
+```{r}
+string <- c(
+  "apple",
+  "219 733 8965",
+  "329-293-8753",
+  "Word: 579-499-7527; Home:543.355.3679"
+)
+phone <- "([2-9][0-9]{2})[- .]([0-9]{3})[- .]([0-9]{4})"
+```
+
+## `str_detect()`
+判断字符串中是否存在 **pattern** ，返回bool值
+```{r}
+str_detect(string, phone)
+```
+base R中可以用`grepl()`函数
+```{r}
+grepl(phone, string)
+```
+
+## `str_subset()`
+返回 **string** 中包含 **pattern** 的字符串，返回vector
+```{r}
+str_subset(string, phone)
+```
+base R中使用`grep()`函数
+```{r}
+grep(phone, string, value = TRUE)
+```
+
+## `str_which()`
+返回 **string** 中存在 **pattern** 的字符串的下标，返回vector
+```{r}
+str_which(string, phone)
+```
+base R中同样使用`grep()`函数
+```{r}
+grep(phone, string, value = FALSE)
+```
+
+## `str_count()`
+返回字符串中 **pattern** 的数量
+```{r}
+str_count(string, phone)
+```
+特别地，当pattern为空时，就是str_length()
+```{r}
+str_count(string, "")
+```
+
+## `str_locate()`
+返回 **pattern** 在字符串中的位置, `str_locate()`仅返回第一个，返回matrix
+```{r}
+str_locate(string, phone)
+```
+base R中使用`regexpr()`函数，其返回的值为匹配的起始位置以及匹配长度，匹配的起始位置在返回值中
+```{r}
+regexpr(phone, string)
+```
+匹配长度在返回值的attributes中
+```{r}
+value <- regexpr(phone, string)
+attributes(value)$match.length
+```
+`str_locate_all()`返回所有，返回的是一个list
+```{r}
+str_locate_all(string, phone)
+```
+对应地，base R中使用`gregexpr()`返回一个list
+```{r}
+gregexpr(phone, string)
+```
+
+## `str_extract()`
+提取字符串中满足 **pattern** 的部分，`str_extract()`仅返回第一个，返回vector
+```{r}
+str_extract(string, phone)
+```
+`str_extract_all()`返回全部，默认返回一个list
+```{r}
+str_extract_all(string, phone)
+```
+base R中需要将`regexpr()`和`gregexpr()`配合`rematches()`使用
+```{r}
+regmatches(string, regexpr(phone, string))
+regmatches(string, gregexpr(phone, string))
+```
+## `str_match()`
+在extract的基础上，提取**pattern**中用小括号选取的部分
+```{r}
+str_match(string, phone)
+```
+
+```{r}
+str_match_all(string, phone)
+```
+base R中使用`regexec()`配合`rematches()`使用，但是只能取出第一个匹配的结果，似乎缺少一个对应的`gregexec()`函数
+```{r}
+regmatches(string, regexec(phone, string))
+```
+
+## `str_replace()`
+将字符串中满足 **pattern** 的部分替换
+```{r}
+str_replace(string, phone, "XXX-XXX-XXXX")
+str_replace_all(string, phone, "XXX-XXX-XXXX")
+```
+base R中使用`sub()`和`gsub()`函数
+```{r}
+sub(phone, "XXX-XXX-XXXX", string)
+gsub(phone, "XXX-XXX-XXXX", string)
+```
+
+## `str_split()`
+将一个字符串分成几个子串，分隔符为 **pattern**
+```{r}
+str_split(c("a-b.c", "x-y"), "[-.]")
+```
+base R中使用`strsplit()`
+```{r}
+strsplit(c("a-b.c", "x-y"), "[-.]")
+```
+
+------------------------------
+
+# base R与`stringr`的性能比较
+base R中的字符串处理函数大部分是在调用R的内部函数，`stringr`是调用C函数。性能测试的结果在不同的环境，不同的数据集下有很大差距，解释其原理有些超出了我的知识范畴。所以在一个新的环境或数据集下，可以先使用`microbenchmark`包做一些简单测试，之后选择在当前环境下性能更优的处理方法。
