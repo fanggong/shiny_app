@@ -1,19 +1,22 @@
 ---
-title: "Advanced R学习笔记"
+title: "R的面向对象编程"
 author: "Fang Yongchao"
-date: "`r Sys.Date()`"
+date: "2021-01-18"
 output:
   html_document:
+    theme: journal
+    highlight: zenburn
     toc: true
     toc_depth: 3
     toc_float:
       collapsed: false
       smooth_scroll: false
     number_section: true
-  runtime: shiny
 ---
 
 # 面向对象编程
+
+------------------------------
 
 - `pryr::otype()`：检查对象类型
 - `pryr::ftype()`：检查函数类型
@@ -26,7 +29,7 @@ output:
 ## S3
 
 - 目前使用的大部分对象都是S3对象
-- 在S3中，**方法**是一个**泛型函数**，一个**泛型函数**会有多个**方法**，可以用`methods()`来查看**泛型函数**的**方法**
+- 在S3中，**方法**属于**泛型函数**，一个**泛型函数**会有多个**方法**，可以用`methods()`来查看**泛型函数**的**方法**
 - S3并不需要一个正式的类定义，需要的仅仅是一个构造函数
 
 ```{r, message=FALSE}
@@ -101,8 +104,8 @@ setClass(
   contains = "Person"
 )
 # 创建对象
-myleader <- new("Person", name = "Gong Yufang", age = 27)
-me <- new("Member", leader = myleader, group = 1,
+my_leader <- new("Person", name = "Gong Yufang", age = 27)
+me <- new("Member", leader = my_leader, group = 1,
           name = "Fang Yongchao", age = 28)
 ```
 
@@ -129,7 +132,7 @@ setMethod(
     ))
   }
 )
-introduce(myleader)
+introduce(my_leader)
 introduce(me)
 ```
 
@@ -148,27 +151,28 @@ newAccount <- setRefClass(
   "Account",
   fields = list(balance = "numeric")
 )
-me <- newAccount$new(balance = 100)
+my_account <- newAccount$new(balance = 100)
+my_account
 ```
 
 ```{r}
 # 对象并不是复制后修改
-him <- me
-me$balance <- 200
-him$balance
+his_account <- my_account
+my_account$balance <- 200
+his_account$balance
 ```
 
 ```{r}
 # 通过copy()实现复制后修改
-her <- me$copy()
-me$balance <- 100
-her$balance
+her_account <- my_account$copy()
+my_account$balance <- 100
+her_account$balance
 ```
 
-### 定义类的同时定义方法
+### 定义类的方法
 
 ```{r}
-newAccount <- setRefClass(
+Account <- setRefClass(
   "Account",
   fields = list(balance = "numeric"),
   methods = list(
@@ -180,21 +184,114 @@ newAccount <- setRefClass(
     }
   )
 )
-me <- newAccount$new(balance = 100)
+my_account <- Account$new(balance = 100)
+my_account
 ```
 
 ```{r}
 # 取100块钱
-me$withdrow(100)
-me$balance
+my_account$withdrow(100)
+my_account$balance
 ```
 
 ```{r}
 # 存200块钱
-me$deposit(200)
-me$balance
+my_account$deposit(200)
+my_account$balance
 ```
 
-# 环境
+### 类的继承
 
-##
+```{r}
+creditAccount <- setRefClass(
+  "creditAccount",
+  contains = "Account"
+)
+my_credit_account <- creditAccount$new(balance = 200)
+my_credit_account$balance
+```
+
+## R6
+
+- 简单理解就是另一版的RC
+- R6基于S3，但是RC基于S4
+- R6比RC更快
+
+### 定义类、方法和创建对象
+
+```{r}
+library(R6)
+Person <- R6Class(
+  "Person",
+  public = list(
+    name = NA,
+    initialize = function(name, age) {
+      self$name <- name
+      private$.age <- age
+    },
+    finalize = function() {
+      message("object Person being deleted")
+    },
+    print = function() {
+      cat(sprintf("My name is %s, I am %s\n", self$name, private$.age))
+    },
+    grow_up = function(n) {
+      private$.age <- private$.age + n 
+    }
+  ),
+  private = list(
+    .age = NA
+  )
+)
+Person
+```
+
+```{r}
+me <- Person$new("Fang", 28)
+me
+me$name
+me$.age
+```
+
+```{r}
+me$grow_up(3)
+me
+```
+
+```{r}
+rm(me)
+```
+
+### Active binding
+
+```{r}
+Person$set("active", "age", function(value) {
+  if (missing(value)) {
+    private$.age
+  } else {
+    cat("age is read only!\n")
+  }
+})
+me <- Person$new("Gong", "26")
+me
+me$name
+me$age
+me$age <- 18
+```
+
+### 继承
+
+```{r}
+Leader <- R6Class(
+  "Leader",
+  inherit = Person,
+  public = list(
+    print = function() {
+      super$print()
+      cat("I am a Leader\n")
+    }
+  )
+)
+me <- Leader$new("Fang", 28)
+me
+```
