@@ -279,7 +279,7 @@ me$age
 me$age <- 18
 ```
 
-### 继承
+### 类的继承
 
 ```{r}
 Leader <- R6Class(
