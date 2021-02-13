@@ -12,6 +12,6 @@ ui <- dashboardPagePlus(
     )
   ),
   body = dashboardBody(
-    
+    source("ui/shinyjs.R", local = TRUE)$value
   ),
 )
