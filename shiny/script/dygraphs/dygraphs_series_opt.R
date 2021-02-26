@@ -1,3 +1,3 @@
 library(dygraphs)
-dygraph(index_history) %>% 
+dygraph(dat) %>%
   dyRangeSelector()

@@ -1,3 +1,1 @@
-output$datatables_main <- renderDataTable({
-  iris
-})
+notebook_server("DataTables", renderDataTable)

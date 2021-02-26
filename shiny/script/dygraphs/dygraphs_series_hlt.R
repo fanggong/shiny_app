@@ -1,3 +1,3 @@
 library(dygraphs)
-dygraph(index_history) %>%
+dygraph(dat) %>%
   dyHighlight(highlightSeriesOpts = list(strokeWidth = 3))

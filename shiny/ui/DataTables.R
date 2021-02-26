@@ -1,6 +1,6 @@
-if (!require(DT)) install.packages("DT")
 
-tabItem(
-  tabName = "DataTables",
-  dataTableOutput("datatables_main")
+DT_samples <- list(
+  "Base Usage" = "base_usage"
 )
+
+notebook_ui("DataTables", "DataTables", DT_samples, dataTableOutput)
