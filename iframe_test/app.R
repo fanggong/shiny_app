@@ -32,7 +32,7 @@ server <- function(input, output, session) {
   output$rect_plot <- renderPlot({
     input$plot
     ggplot(isolate(dat()), aes(x = long, y = lat)) + 
-      geom_bin2d(bins = 10, drop = FALSE)
+      geom_bin2d(bins = 15, drop = FALSE)
   })
   
 }
