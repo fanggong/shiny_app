@@ -21,7 +21,7 @@ jobs:
           FOLDER: ./ 
           SERVER_IP: ${{ secrets.SSH_HOST }} 
           USERNAME: ${{ secrets.SSH_USERNAME }} 
-          SERVER_DESTINATION: /srv/shiny-server/note/
+          SERVER_DESTINATION: /srv/shiny-server/shiny_app/
       - name: Restart server
         uses: appleboy/ssh-action@master
         with:
