@@ -3,38 +3,28 @@ library(ggplot2)
 
 ui <- fluidPage(
   fluidRow(
-    column(width = 2, numericInput("point_num", "输入点的数量", value = 100, step = 1)),
-    column(width = 2, br(), actionButton("plot", "REPLOT"))
+    column(width = 3, actionButton("plot", "点击重置散点图", width = "80%"))
   ),
   fluidRow(
-    column(width = 6, plotOutput("scatter_plot")),
-    column(width = 6, plotOutput("rect_plot"))
+    column(width = 8, plotOutput("scatter_plot"), offset = 2)
   )
 )
 
 server <- function(input, output, session) {
-  dat <- reactive({
-    input$plot
-    isolate(
-      data.frame(
-        long = rnorm(input$point_num),
-        lat = rnorm(input$point_num)
-      )
+  dat <- eventReactive(input$plot, {
+    num <- sample(1000, 1)
+    data.frame(
+      long = rnorm(num),
+      lat = rnorm(num),
+      pos = sample(c("E", "W", "N", "S"), num, replace = TRUE)
     )
   })
   
   output$scatter_plot <- renderPlot({
-    input$plot
-    ggplot(isolate(dat()), aes(x = long, y = lat)) +
-      geom_point()
+    ggplot(dat(), aes(x = long, y = lat, color = pos)) +
+      geom_point(size = 2) + 
+      theme_bw()
   })
-  
-  output$rect_plot <- renderPlot({
-    input$plot
-    ggplot(isolate(dat()), aes(x = long, y = lat)) + 
-      geom_bin2d(bins = 15, drop = FALSE)
-  })
-  
 }
 
 shinyApp(ui, server)
