@@ -97,9 +97,9 @@ ggplot(dat, aes(x = long, y = lat, shape = shape, color = color)) +
     legend.title = element_text(hjust = 0),
     legend.title.align = 0.5,
     
-    legend.position = "top",
+    legend.position = "right",
   
-    legend.direction = "horizontal",
+    legend.direction = "vertical",
     
     legend.justification = "center",
     
