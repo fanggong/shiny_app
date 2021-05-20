@@ -1,2 +1,0 @@
-library(DT)
-datatable(dat)
