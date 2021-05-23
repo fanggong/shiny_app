@@ -1,53 +1,6 @@
 library(R6)
 library(openssl)
-
-
-# Block ----------
-Block <- R6Class(
-  "Block",
-  public = list(
-    info = list(
-      prev_hash = NA,
-      transactions = NA, 
-      timestamp = NA,
-      hash = NA,
-      nonce = NA
-    ),
-    initialize = function(transactions, prev_hash) {
-      self$info$transactions <- transactions
-      self$info$prev_hash <- prev_hash
-      self$info$timestamp <- format(Sys.time(), tz = "UTC")
-      self$info$hash <- openssl::sha256(paste0(
-        self$info$prev_hash, self$info$transactions, self$info$timestamp
-      ))
-    }
-  )
-)
-
-build_merkle <- function(transactions) {
-  
-}
-
-b1 <- Block$new("Iced Americano", "")
-b1$info
-
-# BlockChain ---------
-BlockChain <- R6Class(
-  "BlockChain",
-  public = list(
-    block = NA,
-    initialize = function() {
-      self$block = list()
-    },
-    add_block = function(block) {
-      self$block <- append(self$block, list(block$info))
-    }
-  )
-)
-
-bc <- BlockChain$new()
-bc$add_block(b1)
-bc$block
+library(digest)
 
 # Wallet ---------------
 Wallet <- R6Class(
@@ -55,13 +8,13 @@ Wallet <- R6Class(
   public = list(
     address = NA,
     initialize = function() {
-      private$.private_key = ec_keygen(curve = "P-256")
-      private$.public_key = private$.private_key$pubkey
-      
-      self$address = base64_encode(sha256(private$.public_key))
+      key <- ec_keygen(curve = "P-256")
+      private$.private_key <- key
+      private$.public_key <- key$pubkey
+      self$address = digest(private$.public_key, algo = "sha256")
     },
     sign = function(message) {
-      message = serialize(message, NULL)
+      message <- serialize(message, NULL)
       return(signature_create(message, hash = sha256, key = private$.private_key))
     }
   ),
@@ -85,17 +38,19 @@ sig_verify <- function(message, sig, pubkey) {
   return(signature_verify(message, sig, sha256, pubkey))
 }
 
-wl <- Wallet$new()
+fang <- Wallet$new()
+fang$pubkey
 data <- "dell"
-sig <- wl$sign(data)
-sig_verify(data, sig, wl$pubkey)
+sig <- fang$sign(data)
+sig_verify(data, sig, fang$pubkey)
 
 # Transaction -------
+
 Transaction <- R6Class(
   "Transaction",
   public = list(
-    info = list(
-      dat = list(
+    attr = list(
+      info = list(
         sender = NA,
         recipient = NA,
         amount = NA
@@ -104,22 +59,74 @@ Transaction <- R6Class(
       pubkey = NA
     ),
     initialize = function(sender, recipient, amount) {
-      self$info$dat$sender <- sender
-      self$info$dat$recipient <- recipient
-      self$info$dat$amount <- amount
+      self$attr$info$sender <- sender
+      self$attr$info$recipient <- recipient
+      self$attr$info$amount <- amount
     },
     set_sign = function(signature, pubkey) {
-      self$info$signature <- signature
-      self$info$pubkey <- pubkey
+      self$attr$signature <- signature
+      self$attr$pubkey <- pubkey
     }
   )
 )
 
-# 加密的操作由谁来进行？
+fang <- Wallet$new()
+gong <- Wallet$new()
+ts <- Transaction$new(fang$address, gong$address, 100)
+sig <- fang$sign(ts$attr$info)
+ts$set_sign(sig, fang$pubkey)
+sig_verify(ts$attr$info, ts$attr$signature, ts$attr$pubkey)
 
-ts <- Transaction$new("", wl$address, 120)
-ts$set_sign(wl$sign(ts$info$dat), wl$pubkey)
-sig_verify(ts$info$dat, ts$info$signature, ts$info$pubkey)
+
+# Block ----------
+Block <- R6Class(
+  "Block",
+  public = list(
+    attr = list(
+      prev_hash = NA,
+      transactions = NA, 
+      timestamp = NA,
+      hash = NA,
+      nonce = NA
+    ),
+    initialize = function(transactions, prev_hash) {
+      self$attr$transactions <- transactions
+      self$attr$prev_hash <- prev_hash
+      self$attr$timestamp <- format(Sys.time(), tz = "UTC")
+      self$attr$hash <- digest(list(
+        self$attr$prev_hash, self$attr$transactions, self$attr$timestamp
+      ), algo = "sha256")
+    }
+  )
+)
+
+fang <- Wallet$new()
+gong <- Wallet$new()
+t1 <- Transaction$new("", fang$address, 200)
+t2 <- Transaction$new(fang$address, gong$address, 100)
+t2$set_sign(fang$sign(t2$attr$info), fang$pubkey)
+t3 <- Transaction$new(gong$address, fang$address, 50)
+t3$set_sign(gong$sign(t3$attr$info), gong$pubkey)
+bl <- Block$new(t, "")
+bl$attr
+
+# BlockChain ---------
+BlockChain <- R6Class(
+  "BlockChain",
+  public = list(
+    block = NA,
+    initialize = function() {
+      self$block = list()
+    },
+    add_block = function(block) {
+      self$block <- append(self$block, list(block))
+    }
+  )
+)
+
+bc <- BlockChain$new()
+bc$add_block(bl$attr)
+bc$block
 
 # ProofOfWork --------
 ProofOfWork <- R6Class(
@@ -140,20 +147,20 @@ ProofOfWork <- R6Class(
       t <- Transaction$new(
         sender = "", recipient = self$miner$address, amount = self$reward_amount
       )
-      t$set_sign(self$miner$sign(t$info$dat), self$miner$pubkey)
-      block$info$transactions <- append(list(t$info), block$info$transactions)
+      t$set_sign(self$miner$sign(t$attr$info), self$miner$pubkey)
+      block$attr$transactions <- append(list(t$attr), block$attr$transactions)
       
       i <- 0
       prefix <- paste(rep("0", self$difficulty), collapse = "")
       while (TRUE) {
-        digest <- openssl::sha256(paste0(
-          block$info$prev_hash, block$info$transactions, block$info$timestamp, i
-        ))
+        digest <- digest(list(
+          block$attr$prev_hash, block$attr$transactions, block$attr$timestamp, i
+        ), algo = "sha256")
         cat(i, ": ", digest, "\n")
         if (substr(digest, 1, self$difficulty) == prefix) {
-          block$info$nonce <- i
-          block$info$hash <- digest
-          return(self$block)
+          block$attr$nonce <- i
+          block$attr$hash <- digest
+          return(self$block$attr)
         } else {
           i <- i + 1
         }
@@ -161,10 +168,10 @@ ProofOfWork <- R6Class(
     },
     validate = function() {
       block <- self$block
-      digest <- openssl::sha256(paste0(
-        block$info$prev_hash, block$info$transactions, block$info$timestamp,
-        block$info$nonce
-      ))
+      digest <- digest(list(
+        block$attr$prev_hash, block$attr$transactions, block$attr$timestamp,
+        block$attr$nonce
+      ), algo = "sha256")
       prefix <- paste(rep("0", self$difficulty), collapse = "")
       return(substr(digest, 1, self$difficulty) == prefix)
     }
@@ -175,10 +182,10 @@ get_balance <- function(user, block_chain) {
   balance <- 0
   for (block in block_chain$block)
     for (t in block$transactions) {
-      if (t$dat$sender == user$address) {
-        balance <- balance - t$dat$amount
-      } else if (t$dat$recipient == user$address) {
-        balance <- balance + t$dat$amount
+      if (t$info$sender == user$address) {
+        balance <- balance - t$info$amount
+      } else if (t$info$recipient == user$address) {
+        balance <- balance + t$info$amount
       } else {
         next
       }
@@ -206,21 +213,21 @@ cat("gongyufang has", get_balance(gongyufang, block_chain), "coin!\n")
 cat("soba has", get_balance(soba, block_chain), "coin!\n")
 
 new_transaction <- Transaction$new(fangyongchao$address, gongyufang$address, 30)
-new_transaction$set_sign(gongyufang$sign(new_transaction$info$dat), gongyufang$pubkey)
-sig_verify(new_transaction$info$dat, new_transaction$info$signature, new_transaction$info$pubkey)
+new_transaction$set_sign(fangyongchao$sign(new_transaction$attr$info), fangyongchao$pubkey)
+sig_verify(new_transaction$attr$info, new_transaction$attr$signature, new_transaction$attr$pubkey)
 
-new_block <- Block$new(transactions = list(new_transaction$info), prev_hash = genesis_block$info$hash)
+new_block <- Block$new(transactions = list(new_transaction$attr), prev_hash = genesis_block$info$hash)
 w2 <- ProofOfWork$new(new_block, soba)
 second_block <- w2$mine()
 
 w2$validate()
 
-block_chain$add_block(new_block)
+block_chain$add_block(second_block)
 
-cat("fangyongchao has", get_balance(fangyongchao), "coin!\n")
-cat("gongyufang has", get_balance(gongyufang), "coin!\n")
-cat("soba has", get_balance(soba), "coin!\n")
-
+cat("fangyongchao has", get_balance(fangyongchao, block_chain), "coin!\n")
+cat("gongyufang has", get_balance(gongyufang, block_chain), "coin!\n")
+cat("soba has", get_balance(soba, block_chain), "coin!\n")
 
 # Nodes ------------
 
+# 有点弄不下去了，R多线程咋弄要研究一下
