@@ -1,6 +1,6 @@
 
 if (!require(renv)) {
-  install.packages("renv")
+  install.packages("renv", repos = "http://cran.us.r-project.org")
 }
 
 dirs <- dir()
