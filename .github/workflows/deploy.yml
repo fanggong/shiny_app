@@ -30,5 +30,5 @@ jobs:
           key: ${{ secrets.DEPLOY_KEY }}
           script: |
             cd /srv/shiny-server/shiny_app
-            Rscipt restore_packages.R
+            Rscript restore_packages.R
             systemctl restart shiny-server.service
