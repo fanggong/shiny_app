@@ -30,6 +30,5 @@ jobs:
           key: ${{ secrets.DEPLOY_KEY }}
           script: |
             cd /srv/shiny-server/shiny_app
-            R -e "renv::restore()"
-            R -e "renv::isolate()"
+            Rscipt restore_packages.R
             systemctl restart shiny-server.service
