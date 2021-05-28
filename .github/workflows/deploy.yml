@@ -29,4 +29,7 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.DEPLOY_KEY }}
           script: |
+            cd /srv/shiny-server/shiny_app
+            R -e "renv::restore()"
+            R -e "renv::isolate()"
             systemctl restart shiny-server.service
