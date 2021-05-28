@@ -1,4 +1,8 @@
 
+if (!require(renv)) {
+  install.packages("renv")
+}
+
 dirs <- dir()
 dirs <- dirs[file.info(dirs)$isdir]
 
