@@ -16,6 +16,12 @@ dat <- data.frame(
 # init theme
 theme <- theme_get()
 
+# generate config file
+# element / call what
+
+# for each in names(theme)
+# if isnull then find "call what" and init
+# if not null then do nothing
 
 source("module/element_rect.R")
 

@@ -18,12 +18,32 @@ plt <- ggplot(dat) +
 plt
 
 theme <- theme_get()
-theme$title <- element_text(family = 'Kai')
+theme$title <- element_text()
 
 plt + theme
 
 # save(theme, file = "theme.Rdata")
-# 
-# 
+
 # load("theme.Rdata")
+
+if (interactive()) {
+  ui <- fluidPage(
+    uiOutput("x_1"),
+    uiOutput("x_2"),
+    uiOutput("x_3")
+  )
+  server <- function(input, output, session) {
+    for (i in 1:3) {
+      output[[paste0("x_", i)]] <- renderUI({
+        textInput(paste0("x_", i), label = paste0("x_", i), value = i)
+      })
+    }
+  }
+  shinyApp(ui, server)
+}
+
+
+
+
+
 

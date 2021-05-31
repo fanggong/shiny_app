@@ -47,6 +47,6 @@ server <- function(input, output, session) {
       plt <- plt + facet_grid(rows = vars(facet_y), cols = vars(facet_x))
     }
     
-    plt
+    plt + theme
   })
 }
