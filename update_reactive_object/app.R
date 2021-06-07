@@ -63,5 +63,5 @@ server <- function(input, output, session) {
   })
 }
 
-shinyApp(ui, server, options = list(display.mode = "showcase"))
+shinyApp(ui, server)
 
