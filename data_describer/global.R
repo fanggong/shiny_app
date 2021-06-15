@@ -12,6 +12,7 @@ library(shinycssloaders)
 library(stringr)
 library(echarts4r)
 library(htmltools)
+library(fresh)
 
 source("./utils/utils.R")
 source("./setting/colors.R")
