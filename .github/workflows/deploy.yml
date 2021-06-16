@@ -22,13 +22,13 @@ jobs:
           SERVER_IP: ${{ secrets.SSH_HOST }}
           USERNAME: ${{ secrets.SSH_USERNAME }}
           SERVER_DESTINATION: /srv/shiny-server/shiny_app/
-#       - name: Restart server
-#         uses: appleboy/ssh-action@master
-#         with:
-#           host: ${{ secrets.SSH_HOST }}
-#           username: ${{ secrets.SSH_USERNAME }}
-#           key: ${{ secrets.DEPLOY_KEY }}
-#           script: |
-#             cd /srv/shiny-server/shiny_app
-#             Rscript restore_packages.R
-#             systemctl restart shiny-server.service
+      - name: Restart server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.DEPLOY_KEY }}
+          script: |
+            cd /srv/shiny-server/shiny_app
+            Rscript restore_packages.R
+            systemctl restart shiny-server.service

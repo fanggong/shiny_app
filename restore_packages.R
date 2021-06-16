@@ -13,6 +13,7 @@ cat("Waiting for process...\n")
 
 for (each in dirs) {
   cat("Start process", each, "\n")
+  renv::activate(each)
   renv::restore(each)
   renv::isolate(each)
   cat("Over process", each, "\n")
