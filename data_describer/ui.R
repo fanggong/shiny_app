@@ -7,8 +7,8 @@ ui <- dashboardPage(
   # sidebar ----------------
   sidebar = dashboardSidebar(
     sidebarMenu(
-      menuItem("Correlation Analysis", tabName = "correlation_analysis", icon = icon("braille")),
-      menuItem("Upload Data", tabName = "data_upload", icon = icon("file-upload"))
+      menuItem("Data Upload", tabName = "data_upload", icon = icon("file-upload")),
+      menuItem("Correlation Analysis", tabName = "correlation_analysis", icon = icon("braille"))
     )
   ),
   # body ------------------
@@ -19,11 +19,11 @@ ui <- dashboardPage(
       tabItem(
         tabName = "data_upload",
         fluidRow(
-          column(4, fileInput("file", label = NULL, buttonLabel = "Select Data...", width = "100%")),
-          column(5, fileInput("info", label = NULL, buttonLabel = "Select Description File... ", width = "100%")),
-          column(2, actionButton("read", "Read Data", width = "100%"))
+          column(5, fileInput("file", label = "Select Data", width = "100%")),
+          column(5, fileInput("info", label = "Select Description File", width = "100%")),
+          column(2, actionButton("read", "Read Data", width = "100%"),
+                 prettyCheckbox("use_test_data", "Use Test Data?", value = TRUE, status = "primary"))
         ),
-        fluidRow(column(12, verbatimTextOutput("test"))),
         box(
           width = NULL, title = "Numerical Variables", status = "info",
           solidHeader = TRUE, collapsible = TRUE, id = "numerical_variables_box",
@@ -51,9 +51,7 @@ ui <- dashboardPage(
               direction = "horizontal", justified = TRUE, size = "sm"
             ),
             selectizeInput(
-              "cor_var_x_sel", label = NULL, choices = letters,
-              options = list(openOnFocus = TRUE),
-              multiple = TRUE,
+              "cor_var_x_sel", label = NULL, choices = letters, multiple = TRUE,
               width = "100%"
             ),
             radioGroupButtons(

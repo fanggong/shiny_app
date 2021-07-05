@@ -1,5 +1,5 @@
 observeEvent(input$read, {
-  if (TEST_MODE) {
+  if (input$use_test_data) {
     iris$ordinal <- sample(letters[1:5], nrow(iris), replace = TRUE)
     iris$nothing <- rnorm(nrow(iris))
     info <- reactive(data.frame(

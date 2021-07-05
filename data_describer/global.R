@@ -19,8 +19,6 @@ source("./setting/colors.R")
 
 options(shiny.reactlog = TRUE)
 
-TEST_MODE <- TRUE
-
 VAR_TYPE <- c("Numerical", "Categorical", "Ordinal")
 
 COR_METHOD <- c(
