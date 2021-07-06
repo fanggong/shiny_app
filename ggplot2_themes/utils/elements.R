@@ -1,14 +1,14 @@
 
-element_line <- function() {
-  ggplot2::element_line(inherit.blank = TRUE)
+element_line <- function(..., inherit.blank = TRUE) {
+  ggplot2::element_line(..., inherit.blank = inherit.blank)
 }
 
-element_rect <- function() {
-  ggplot2::element_rect(inherit.blank = TRUE)
+element_rect <- function(..., inherit.blank = TRUE) {
+  ggplot2::element_rect(..., inherit.blank = inherit.blank)
 }
 
-element_text <- function() {
-  ggplot2::element_text(inherit.blank = TRUE)
+element_text <- function(..., inherit.blank = TRUE) {
+  ggplot2::element_text(..., inherit.blank = inherit.blank)
 }
 
 element_margin <- function(t = NULL, r = NULL, b = NULL, l = NULL, unit = "pt") {

@@ -12,11 +12,15 @@ dat <- data.frame(
 
 # initialize theme
 ele_config <- yaml::read_yaml("ele_config.yaml")
-THEME <- theme_get()
+theme_init <- theme_get()
+new_theme <- reactiveValues()
 
-for (ele in names(THEME)) {
-  if (is.null(THEME[[ele]])) {
-    THEME[ele] <- list(do.call(ele_config[[ele]], list()))
+for (ele in names(theme_init)) {
+  if (is.null(theme_init[[ele]])) {
+    theme_init[ele] <- list(do.call(ele_config[[ele]], list()))
   }
+  new_theme[[ele]] <- theme_init[[ele]]
 }
 rm(ele)
+
+

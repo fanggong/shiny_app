@@ -79,6 +79,13 @@
       "Repository": "CRAN",
       "Hash": "6cab523af06ac301e7a40c5529d45882"
     },
+    "colourpicker": {
+      "Package": "colourpicker",
+      "Version": "1.1.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "fe0cb3d8854c168aef827aeab4b3b473"
+    },
     "commonmark": {
       "Package": "commonmark",
       "Version": "1.7",
@@ -163,6 +170,13 @@
       "Repository": "CRAN",
       "Hash": "af2c2531e55df5cf230c4b5444fc973c"
     },
+    "htmlwidgets": {
+      "Package": "htmlwidgets",
+      "Version": "1.5.3",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "6fdaa86d0700f8b3e92ee3c445a5a10d"
+    },
     "httpuv": {
       "Package": "httpuv",
       "Version": "1.6.1",
@@ -239,6 +253,13 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "26fa77e707223e1ce042b2b5d09993dc"
+    },
+    "miniUI": {
+      "Package": "miniUI",
+      "Version": "0.1.1.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "fec5f52652d60615fdb3957b3d74324a"
     },
     "munsell": {
       "Package": "munsell",
@@ -317,6 +338,13 @@
       "Repository": "CRAN",
       "Hash": "6e3b6ae7fe02b5859e4bb277f218b8ae"
     },
+    "shinyjs": {
+      "Package": "shinyjs",
+      "Version": "2.0.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "9ddfc91d4280eaa34c2103951538976f"
+    },
     "sourcetools": {
       "Package": "sourcetools",
       "Version": "0.1.7",
@@ -372,13 +400,6 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "2826c5d9efb0a88f657c7a679c7106db"
-    },
-    "yonder": {
-      "Package": "yonder",
-      "Version": "0.2.0",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "a1f1732396ee6aff4a6300f2caa44795"
     }
   }
 }
