@@ -1,4 +1,8 @@
 
+element_blank <- function() {
+  ggplot2::element_blank()
+}
+
 element_line <- function(..., inherit.blank = TRUE) {
   ggplot2::element_line(..., inherit.blank = inherit.blank)
 }

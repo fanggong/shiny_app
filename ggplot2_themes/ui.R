@@ -260,7 +260,8 @@ ui <- navbarPage(
     )
   ),
   # footer = column(width = 8, offset = 2, plotOutput("plot", height = "500px")),
-  includeCSS("www/my_navbar.css")
+  includeCSS("www/my_navbar.css"),
+  useShinyjs()
 )
 
 
