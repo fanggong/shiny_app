@@ -3,21 +3,21 @@
 ui <- navbarPage(
   title = "Theme Generator For ggplot2",
   # Sample Plot ----
-  tabPanel(
-    "Graph Elements",
-    tabsetPanel(
-      tabPanel("Use Default Sample Data", uiOutput("sample_data")),
-      tabPanel("Use Your Own Data", uiOutput("own_data"))
-    )
-  ),
+  # tabPanel(
+  #   "Graph Elements",
+  #   tabsetPanel(
+  #     tabPanel("Use Default Sample Data", uiOutput("sample_data")),
+  #     tabPanel("Use Your Own Data", uiOutput("own_data"))
+  #   )
+  # ),
   # Basic ----
   tabPanel(
     "Basic",
     tabsetPanel(
-      tabPanel("All lines", uiOutput("line")),
-      tabPanel("All text", uiOutput("text")),
-      tabPanel("All titles", uiOutput("title")),
-      tabPanel("All borders and backgroupd", uiOutput("rect"))
+      tabPanel("All line elements", uiOutput("line")),
+      tabPanel("All text elements", uiOutput("text")),
+      tabPanel("All title elements", uiOutput("title")),
+      tabPanel("All rectangular elements", uiOutput("rect"))
     )
   ),
   # Axis ----
@@ -70,7 +70,7 @@ ui <- navbarPage(
         tabPanel("X-axis", uiOutput("axis.ticks.length.x")),
         tabPanel("Y-axis", uiOutput("axis.ticks.length.y")),
         tabPanel("Top X-axis", uiOutput("axis.ticks.length.x.top")),
-        tabPanel("Bottom X-axis", uiOutput("axis.ticks.length.xbottom")),
+        tabPanel("Bottom X-axis", uiOutput("axis.ticks.length.x.bottom")),
         tabPanel("Left Y-axis", uiOutput("axis.ticks.length.y.left")),
         tabPanel("Right Y-axis", uiOutput("axis.ticks.length.y.right"))
       )
@@ -92,28 +92,39 @@ ui <- navbarPage(
   # Legend ----
   navbarMenu(
     "Legend",
+    ## Legend - Overall ----
+    tabPanel(
+      "Overall",
+      tabsetPanel(
+        tabPanel("Background", uiOutput("legend.background")),
+        tabPanel("Margin", uiOutput("legend.margin")),
+        tabPanel("Position", uiOutput("legend.position")),
+        tabPanel("Direction", uiOutput("legend.direction")),
+        tabPanel("Justification", uiOutput("legend.justification"))
+      )
+    ),
     ## Legend - Spacing ----
     tabPanel(
       "Spacing",
       tabsetPanel(
-        tabPanel("All", uiOutput("legend.spacing")),
-        tabPanel("X", uiOutput("legend.spacing.x")),
-        tabPanel("Y", uiOutput("legend.spacing.y"))
+        tabPanel("Both", uiOutput("legend.spacing")),
+        tabPanel("Horizontal", uiOutput("legend.spacing.x")),
+        tabPanel("Vertical", uiOutput("legend.spacing.y"))
       )
     ),
     ## Legend - Key ----
     tabPanel(
-      "Key",
+      "Keys",
       tabsetPanel(
         tabPanel("Background", uiOutput("legend.key")),
-        tabPanel("Size", uiOutput("lengend.key.size")),
+        tabPanel("Size", uiOutput("legend.key.size")),
         tabPanel("Height", uiOutput("legend.key.height")),
-        tabPanel("Width", uiOutput("legend.ley.width"))
+        tabPanel("Width", uiOutput("legend.key.width"))
       )
     ),
     ## Legend - Box ----
     tabPanel(
-      "Box",
+      "Boxs",
       tabsetPanel(
         tabPanel("Arrangement", uiOutput("legend.box")),
         tabPanel("Justification", uiOutput("legend.box.just")),
@@ -136,17 +147,6 @@ ui <- navbarPage(
       tabsetPanel(
         tabPanel("Style", uiOutput("legend.title")),
         tabPanel("Align", uiOutput("legend.title.align"))
-      )
-    ),
-    ## Legend - Overall ----
-    tabPanel(
-      "Overall",
-      tabsetPanel(
-        tabPanel("Background", uiOutput("legend.background")),
-        tabPanel("Margin", uiOutput("legend.margin")),
-        tabPanel("Position", uiOutput("legend.position")),
-        tabPanel("Direction", uiOutput("legend.direction")),
-        tabPanel("Justification", uiOutput("legend.justification"))
       )
     )
   ),
@@ -188,6 +188,14 @@ ui <- navbarPage(
   # Plot ----
   navbarMenu(
     "Plot",
+    ## Plot - Overall ----
+    tabPanel(
+      "Overall",
+      tabsetPanel(
+        tabPanel("Background", uiOutput("plot.background")),
+        tabPanel("Margin", uiOutput("plot.margin"))
+      )
+    ),
     ## Plot - Title ----
     tabPanel(
       "Title",
@@ -212,14 +220,6 @@ ui <- navbarPage(
         tabPanel("Style", uiOutput("plot.tag")),
         tabPanel("Position", uiOutput("plot.tag.position"))
       )
-    ),
-    ## Plot - Overall ----
-    tabPanel(
-      "Overall",
-      tabsetPanel(
-        tabPanel("Margin", uiOutput("plot.margin")),
-        tabPanel("Background", uiOutput("plot.background"))
-      )
     )
   ),
   # Strip ----
@@ -229,18 +229,18 @@ ui <- navbarPage(
     tabPanel(
       "Text",
       tabsetPanel(
-        tabPanel("All", uiOutput("strip.text")),
-        tabPanel("X", uiOutput("strip.text.x")),
-        tabPanel("Y", uiOutput("strip.text.y"))
+        tabPanel("Both", uiOutput("strip.text")),
+        tabPanel("Horizontal", uiOutput("strip.text.x")),
+        tabPanel("Vertical", uiOutput("strip.text.y"))
       )
     ),
     ## Strip - Background ----
     tabPanel(
       "Background",
       tabsetPanel(
-        tabPanel("All", uiOutput("strip.background")),
-        tabPanel("X", uiOutput("strip.background.x")),
-        tabPanel("Y", uiOutput("strip.background.y"))
+        tabPanel("Both", uiOutput("strip.background")),
+        tabPanel("Horizontal", uiOutput("strip.background.x")),
+        tabPanel("Vertical", uiOutput("strip.background.y"))
       )
     ),
     ## Strip - Pad ----

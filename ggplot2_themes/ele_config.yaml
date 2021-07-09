@@ -93,7 +93,7 @@ panel.grid.major.y: element_line
 panel.grid.minor: element_line
 panel.grid.minor.x: element_line
 panel.grid.minor.y: element_line
-# panel-others
+# panel-overall
 panel.background: element_rect
 panel.border: element_rect
 panel.ontop: element_logical

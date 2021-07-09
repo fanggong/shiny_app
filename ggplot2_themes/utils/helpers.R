@@ -10,3 +10,14 @@
   attr(x, "validate") <- TRUE
   return(x)
 }
+
+.get_attr_type <- function(x) {
+  if (is.null(x)) {
+    return("NULL")
+  } else if (is.na(x)) {
+    return("NA") 
+  } else {
+    return("Value")
+  }
+}
+
