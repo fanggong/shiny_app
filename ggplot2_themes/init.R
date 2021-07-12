@@ -35,10 +35,17 @@ UNITS <- c("npc", "cm", "inches", "mm", "points", "picas", "bigpts", "dida",
            "cicero", "scaledpts", "lines", "char", "native", "snpc", "strwidth",
            "strheight", "grobwidth", "grobheight")
 
+# initialize tag position
+TAG_POS <- c("topleft", "top", "topright", "left", "right", "bottomleft", "bottom")
 
+TITLE_POS <- c("panel", "plot")
 
+DIRECTION <- c("horizontal", "vertical")
 
+PLACEMENT <- c("inside", "outside")
 
+JUST <- c("top", "bottom", "left", "right")
 
+POSITION <- c("none", "left", "right", "bottom", "top")
 
 

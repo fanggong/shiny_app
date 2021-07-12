@@ -1,6 +1,5 @@
 server <- function(input, output, session) {
   
-  # TODO
   # output$own_data <- renderUI({
   #   h3("Developing...")
   # })
@@ -10,21 +9,15 @@ server <- function(input, output, session) {
   # })
   
   for (ele in names(ele_config)) {
-    if (ele_config[[ele]] %in% "element_rect") {
-      eval(parse(text = sprintf(
-        "output$%s <- renderUI({
-          element_rect_server(\"%s\")
-          element_rect_ui(\"%s\")
-        })", ele, ele, ele
-      )))
-    } else if (ele_config[[ele]] %in% "element_unit") {
-      eval(parse(text = sprintf(
-        "output$%s <- renderUI({
-          element_unit_server(\"%s\")
-          element_unit_ui(\"%s\")
-        })", ele, ele, ele
-      )))
-    }
+    eval(parse(text = sprintf(
+      "output$%s <- renderUI({
+        do.call(%s, args = list(id = \"%s\"))
+        do.call(%s, args = list(id = \"%s\"))
+      })", 
+      ele, 
+      paste0(ele_config[[ele]], "_server"), ele,
+      paste0(ele_config[[ele]], "_ui"), ele
+    )))
   }
-
 }
+

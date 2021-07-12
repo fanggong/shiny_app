@@ -63,8 +63,7 @@ element_rect_ui <- function(id) {
       width = 4
     ),
     mainPanel = mainPanel(
-      plotOutput(ns("plot"), height = "600px") %>% shinycssloaders::withSpinner(),
-      verbatimTextOutput(ns("theme"), placeholder = TRUE)
+      plotOutput(ns("plot"), height = "600px") %>% shinycssloaders::withSpinner()
     )
   )
 }
@@ -85,7 +84,6 @@ element_rect_server <- function(id) {
           }
           shinyjs::disable("inherit.blank")
         } else {
-          # TODO
           for (each in attrs_type)  {
             shinyjs::enable(each)
             if (input[[each]] == "Value") {

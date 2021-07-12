@@ -29,8 +29,7 @@ element_unit_ui <- function(id) {
       )
     ),
     mainPanel = mainPanel(
-      plotOutput(ns("plot"), height = "600px") %>% shinycssloaders::withSpinner(),
-      verbatimTextOutput(ns("theme"), placeholder = TRUE)
+      plotOutput(ns("plot"), height = "600px") %>% shinycssloaders::withSpinner()
     )
   )
 }
@@ -57,9 +56,6 @@ element_unit_server <- function(id) {
         unit(x = input$value, units = input$unit)
       })
       
-      output$theme <- renderPrint({
-        .reactiveValues_to_theme(new_theme)
-      })
       output$plot <- renderCachedPlot({
         plot + .reactiveValues_to_theme(new_theme)
       }, cacheKeyExpr = .reactiveValues_to_theme(new_theme))
