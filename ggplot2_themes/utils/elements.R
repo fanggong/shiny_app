@@ -4,7 +4,9 @@ element_blank <- function() {
 }
 
 element_line <- function(..., inherit.blank = TRUE) {
-  ggplot2::element_line(..., inherit.blank = inherit.blank)
+  element <- ggplot2::element_line(..., inherit.blank = inherit.blank)
+  element["arrow"] <- list(NULL)
+  element
 }
 
 element_rect <- function(..., inherit.blank = TRUE) {
@@ -15,7 +17,7 @@ element_text <- function(..., inherit.blank = TRUE) {
   ggplot2::element_text(..., inherit.blank = inherit.blank)
 }
 
-element_margin <- function(t = NULL, r = NULL, b = NULL, l = NULL, unit = "pt") {
+element_margin <- function(t = NULL, r = NULL, b = NULL, l = NULL, unit = "points") {
   if (length(c(t, r, b, l)) != 4) return(NULL)
   else return(margin(t = t, r = r, b = b, l = l, unit = unit))
 }

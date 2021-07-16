@@ -19,7 +19,8 @@ element_direction_ui <- function(id) {
       )
     ),
     mainPanel = mainPanel(
-      plotOutput(ns("plot"), height = "600px") %>% shinycssloaders::withSpinner()
+      plotOutput(ns("plot"), height = "600px") %>% shinycssloaders::withSpinner(),
+      verbatimTextOutput(ns("theme"), placeholder = TRUE)
     )
   )
 }
@@ -42,7 +43,11 @@ element_direction_server <- function(id) {
         }
         element_direction(direction = input$direction)
       })
-    
+      
+      output$theme <- renderPrint({
+        .reactiveValues_to_theme(new_theme)
+      })
+      
       output$plot <- renderCachedPlot({
         plot + .reactiveValues_to_theme(new_theme)
       }, cacheKeyExpr = .reactiveValues_to_theme(new_theme))

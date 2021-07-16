@@ -18,7 +18,8 @@ element_align_ui <- function(id) {
       )
     ),
     mainPanel = mainPanel(
-      plotOutput(ns("plot"), height = "600px") %>% shinycssloaders::withSpinner()
+      plotOutput(ns("plot"), height = "600px") %>% shinycssloaders::withSpinner(),
+      verbatimTextOutput(ns("theme"), placeholder = TRUE)
     )
   )
 }
@@ -40,6 +41,10 @@ element_align_server <- function(id) {
           return(NULL)
         }
         element_align(number = input$align)
+      })
+      
+      output$theme <- renderPrint({
+        .reactiveValues_to_theme(new_theme)
       })
       
       output$plot <- renderCachedPlot({

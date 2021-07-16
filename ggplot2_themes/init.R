@@ -21,6 +21,7 @@ plot <- ggplot(dat_src, aes(long, lat)) +
 # initialize theme
 ele_config <- yaml::read_yaml("ele_config.yaml")
 theme_init <- theme_get()
+ELEMENTS <- names(theme_init)
 new_theme <- reactiveValues()
 for (ele in names(theme_init)) {
   if (is.null(theme_init[[ele]])) {
@@ -48,4 +49,9 @@ JUST <- c("top", "bottom", "left", "right")
 
 POSITION <- c("none", "left", "right", "bottom", "top")
 
+LINEEND <- c("round", "butt", "square")
+
+ARROW_ENDS <- c("first", "last", "both")
+
+ARROW_TYPE <- c("open", "closed")
 

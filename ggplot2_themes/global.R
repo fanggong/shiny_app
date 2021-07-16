@@ -19,16 +19,15 @@ source("modules/element_position.R")
 # source("modules/element_logical.R")
 # source("modules/element_justification.R")
 # source("modules/element_number.R")
-# source("modules/element_margin.R")
+source("modules/element_margin.R")
 # source("modules/element_text.R")
-# source("modules/element_line.R")
+source("modules/element_line.R")
 source("utils/elements.R")
 source("utils/helpers.R")
 source("init.R")
 
 # theme <- theme_get()
 # 
-# theme$legend.position <- NULL
 # 
 # iris$shape <- sample(letters[1:3], nrow(iris), replace = TRUE)
 # ggplot(iris, aes(Sepal.Length, Sepal.Width)) +
@@ -38,4 +37,5 @@ source("init.R")
 # TODO
 # - element_position and element_tag_position two-element numeric vector input
 # - use sample data or use own data 
+# - use rel() in size
 

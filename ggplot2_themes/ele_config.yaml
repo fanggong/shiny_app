@@ -74,7 +74,7 @@ legend.text.align: element_align
 # lengend-title
 legend.title: element_text
 legend.title.align: element_align
-# legeng-overall
+# legend-overall
 legend.background: element_rect
 legend.margin: element_margin
 legend.position: element_position

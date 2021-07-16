@@ -18,7 +18,8 @@ element_position_ui <- function(id) {
       )
     ),
     mainPanel = mainPanel(
-      plotOutput(ns("plot"), height = "600px") %>% shinycssloaders::withSpinner()
+      plotOutput(ns("plot"), height = "600px") %>% shinycssloaders::withSpinner(),
+      verbatimTextOutput(ns("theme"), placeholder = TRUE)
     )
   )
 }
@@ -40,6 +41,10 @@ element_position_server <- function(id) {
           return(NULL)
         }
         element_position(position = input$position)
+      })
+      
+      output$theme <- renderPrint({
+        .reactiveValues_to_theme(new_theme)
       })
       
       output$plot <- renderCachedPlot({
