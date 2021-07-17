@@ -1,22 +1,15 @@
-
-element_line_ui <- function(id) {
+element_text_ui <- function(id) {
   ns <- NS(id)
   
   args <- theme_init[[id]]
   
-  if (inherits(args, "arrow")) {
-    arrow_angle <- args$arrow$angle
-    arrow_length <- as.character(args$arrow$length)
-    arrow_length_value <- stringr::str_match(arrow_length, "[0-9.]+")
-    arrow_length_unit <- stringr::str_match(arrow_length, "[^0-9.]+")
-    arrow_ends <- args$arrow$ends
-    arrow_type <- args$arrow$type
+  if (!is.null(args$margin)) {
+    margin <- as.character(args$margin)
+    value <- stringr::str_match(margin, "[0-9.]+")
+    unit <- stringr::str_match(margin, "[^0-9.]+")
   } else {
-    arrow_angle <- 30
-    arrow_length_value <- 0.25
-    arrow_length_unit <- "inches"
-    arrow_ends <- "last"
-    arrow_type <- "open"
+    value <- rep(0, 4)
+    unit <- rep("points", 4)
   }
   
   sidebarLayout(
@@ -29,7 +22,27 @@ element_line_ui <- function(id) {
       hr(),
       fluidRow(
         column(6, shinyWidgets::radioGroupButtons(
-          ns("colour_type"), "Line Colour", choices = c("NA", "NULL", "Value"),
+          ns("family_type"), "Font Family", choices = c("NA", "NULL", "Value"),
+          selected = .get_attr_type(args$family),
+          justified = TRUE, width = "100%"
+        )),
+        column(6, textInput(
+          ns("family"), label = br(), value = args$family
+        ))
+      ),
+      fluidRow(
+        column(6, shinyWidgets::radioGroupButtons(
+          ns("face_type"), "Font Face", choices = c("NULL", "Value"),
+          selected = .get_attr_type(args$face),
+          justified = TRUE, width = "100%"
+        )),
+        column(6, selectInput(
+          ns("face"), label = br(), choices = FONT_FACE, selected = args$face
+        ))
+      ),
+      fluidRow(
+        column(6, shinyWidgets::radioGroupButtons(
+          ns("colour_type"), "Text Colour", choices = c("NA", "NULL", "Value"),
           selected = .get_attr_type(args$colour),
           justified = TRUE, width = "100%"
         )),
@@ -39,7 +52,7 @@ element_line_ui <- function(id) {
       ),
       fluidRow(
         column(6, shinyWidgets::radioGroupButtons(
-          ns("size_type"), "Line Size", choices = c("NA", "NULL", "Value"),
+          ns("size_type"), "Text Size", choices = c("NULL", "Value"),
           selected = .get_attr_type(args$size), 
           justified = TRUE, width = "100%"
         )),
@@ -47,53 +60,85 @@ element_line_ui <- function(id) {
           ns("size"), label = br(), 
           value = args$size, 
           min = 0, step = 0.1,
-          icon = list("mm")
+          icon = list("pts")
         ))
       ),
       fluidRow(
         column(6, shinyWidgets::radioGroupButtons(
-          ns("linetype_type"), "Line Type", choices = c("NULL", "Value"),
-          selected = .get_attr_type(args$linetype),
+          ns("hjust_type"), "Justification (H)", choices = c("NA", "NULL", "Value"),
+          selected = .get_attr_type(args$hjust),
           justified = TRUE, width = "100%"
         )),
-        column(6, textInput(
-          ns("linetype"), label = br(), value = args$linetype
+        column(6, numericInput(
+          ns("hjust"), label = br(), value = args$hjust, step = 0.1, min = 0, max = 1
         ))
       ),
       fluidRow(
         column(6, shinyWidgets::radioGroupButtons(
-          ns("lineend_type"), "Line End Style", choices = c("NULL", "Value"),
-          selected = .get_attr_type(args$lineend),
+          ns("vjust_type"), "Justification (V)", choices = c("NA", "NULL", "Value"),
+          selected = .get_attr_type(args$vjust),
           justified = TRUE, width = "100%"
         )),
-        column(6, selectInput(
-          ns("lineend"), label = br(), choices = LINEEND, selected = args$lineend, 
+        column(6, numericInput(
+          ns("vjust"), label = br(), value = args$vjust, step = 0.1, min = 0, max = 1
         ))
       ),
       fluidRow(
         column(6, shinyWidgets::radioGroupButtons(
-          ns("arrow_type"), "Arrow", choices = c("NA", "NULL", "Value"),
-          selected = .get_attr_type(args$arrow),
+          ns("angle_type"), "Angle", choices = c("NA", "NULL", "Value"),
+          selected = .get_attr_type(args$angle),
           justified = TRUE, width = "100%"
+        )),
+        column(6, numericInput(
+          ns("angle"), label = br(), value = args$angle, step = 1, min = 0, max = 360
+        ))
+      ),
+      fluidRow(
+        column(6, shinyWidgets::radioGroupButtons(
+          ns("lineheight_type"), "Line Height", choices = c("NA", "NULL", "Value"),
+          selected = .get_attr_type(args$lineheight),
+          justified = TRUE, width = "100%"
+        )),
+        column(6, numericInput(
+          ns("lineheight"), label = br(), value = args$lineheight, step = 0.1, min = 0
+        ))
+      ),
+      fluidRow(
+        column(7, shinyWidgets::radioGroupButtons(
+          ns("margin_type"), "Margin", choices = c("NULL", "Value"),
+          selected = .get_attr_type(args$margin), justified = TRUE, width = "100%"
+        )),
+      ),
+      fluidRow(
+        column(4, numericInput(
+          ns("value_top"), label = "top", value = as.numeric(value[1])
+        )),
+        column(5, selectInput(
+          ns("unit_top"), label = br(), choices = UNITS, selected = unit[1], width = "100%"
         ))
       ),
       fluidRow(
         column(4, numericInput(
-          ns("angle"), "angle", value = arrow_angle, step = 1
+          ns("value_bottom"), label = "bottom", value = as.numeric(value[3])
         )),
-        column(4, numericInput(
-          ns("value"), "length", value = as.numeric(arrow_length_value)
-        )),
-        column(4, selectInput(
-          ns("unit"), label = br(), choices = UNITS, selected = arrow_length_unit
+        column(5, selectInput(
+          ns("unit_bottom"), label = br(), choices = UNITS, selected = unit[3]
         ))
       ),
       fluidRow(
-        column(4, selectInput(
-          ns("ends"), "ends", choices = ARROW_ENDS, selected = arrow_ends
+        column(4, numericInput(
+          ns("value_left"), label = "left", value = as.numeric(value[4])
         )),
-        column(4, selectInput(
-          ns("type"), "type", choices = ARROW_TYPE, selected = arrow_type
+        column(5, selectInput(
+          ns("unit_left"), label = br(), choices = UNITS, selected = unit[4]
+        ))
+      ),
+      fluidRow(
+        column(4, numericInput(
+          ns("value_right"), label = "right", value = as.numeric(value[2])
+        )),
+        column(5, selectInput(
+          ns("unit_right"), label = br(), choices = UNITS, selected = unit[2]
         ))
       ),
       shinyWidgets::prettyCheckbox(
@@ -110,14 +155,16 @@ element_line_ui <- function(id) {
   )
 }
 
-element_line_server <- function(id) {
+element_text_server <- function(id) {
   moduleServer(
     id, 
     function(input, output, session) {
       
-      attrs <- c("colour", "size", "linetype", "lineend")
+      attrs <- c("family", "face", "colour", "size", "hjust", "vjust", "angle", "lineheight")
       attrs_type <- paste0(attrs, "_type")
-      append_attrs <- c("arrow_type", "angle", "value", "unit", "ends", "type")
+      append_attrs <- c("margin_type", "value_top", "unit_top", 
+                        "value_bottom", "unit_bottom", "value_left",
+                        "unit_left", "value_right", "unit_right")
       
       # enable and disable all the attrs and attrs_type
       observeEvent(input$set_to_blank, {
@@ -165,12 +212,11 @@ element_line_server <- function(id) {
         }
       })
       
-      # reactive new theme
       new_theme[[id]] <- reactive({
         if (input$set_to_blank) {
           return(element_blank())
         }
-
+        
         for (idx in 1:length(attrs)) {
           if (input[[attrs_type[idx]]] == "NULL") {
             assign(attrs[idx], NULL)
@@ -180,29 +226,29 @@ element_line_server <- function(id) {
             assign(attrs[idx], input[[attrs[idx]]])
           }
         }
-
-        if (!is.null(linetype)) {
-          if (linetype %in% as.character(0:8)) {
-            linetype <- as.numeric(linetype)
-          }
-        }
+      
         
-        result <- element_line(
+        result <- element_text(
+          family = family,
+          face = face,
           colour = colour,
           size = size,
-          linetype = linetype,
-          lineend = lineend,
+          hjust = hjust,
+          vjust = vjust,
+          angle = angle,
+          lineheight = lineheight,
           inherit.blank = input$inherit.blank
         )
         
-        if (input$arrow_type == "NULL") {
-          result["arrow"] <- list(NULL)
-        } else if (input$arrow_type == "NA") {
-          result["arrow"] <- list(FALSE)
+        if (input$margin_type == "NULL") {
+          result["margin_type"] <- list(NULL)
+        } else if (input$margin_type == "NA") {
+          result["margin_type"] <- list(FALSE)
         } else {
-          result["arrow"] <- list(arrow(
-            angle = input$angle, length = unit(input$value, input$unit),
-            ends = input$ends, type = input$type
+          result["margin_type"] <- list(margin(
+            t = input$value_top, r = input$value_right,
+            b = input$value_bottom, l = input$value_left,
+            unit = c(input$unit_top, input$unit_right, input$unit_bottom, input$unit_left)
           ))
         }
         
@@ -211,10 +257,6 @@ element_line_server <- function(id) {
       
       output$theme <- renderPrint({
         .reactiveValues_to_theme(new_theme)
-        # arrow(
-        #   angle = input$angle, length = unit(input$value, input$unit),
-        #   ends = input$ends, type = input$type
-        # )
       })
       
       output$plot <- renderCachedPlot({

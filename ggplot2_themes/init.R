@@ -55,3 +55,4 @@ ARROW_ENDS <- c("first", "last", "both")
 
 ARROW_TYPE <- c("open", "closed")
 
+FONT_FACE <- c("plain", "italic", "bold", "bold.italic")

@@ -22,7 +22,7 @@ element_margin_ui <- function(id) {
       ),
       fluidRow(
         column(4, numericInput(
-          ns("value_top"), label = "Top", value = as.numeric(value[1])
+          ns("value_top"), label = "top", value = as.numeric(value[1])
         )),
         column(5, selectInput(
           ns("unit_top"), label = br(), choices = UNITS, selected = unit[1], width = "100%"
@@ -30,7 +30,7 @@ element_margin_ui <- function(id) {
       ),
       fluidRow(
         column(4, numericInput(
-          ns("value_bottom"), label = "Bottom", value = as.numeric(value[3])
+          ns("value_bottom"), label = "bottom", value = as.numeric(value[3])
         )),
         column(5, selectInput(
           ns("unit_bottom"), label = br(), choices = UNITS, selected = unit[3]
@@ -38,7 +38,7 @@ element_margin_ui <- function(id) {
       ),
       fluidRow(
         column(4, numericInput(
-          ns("value_left"), label = "Left", value = as.numeric(value[4])
+          ns("value_left"), label = "left", value = as.numeric(value[4])
         )),
         column(5, selectInput(
           ns("unit_left"), label = br(), choices = UNITS, selected = unit[4]
@@ -46,7 +46,7 @@ element_margin_ui <- function(id) {
       ),
       fluidRow(
         column(4, numericInput(
-          ns("value_right"), label = "Right", value = as.numeric(value[2])
+          ns("value_right"), label = "right", value = as.numeric(value[2])
         )),
         column(5, selectInput(
           ns("unit_right"), label = br(), choices = UNITS, selected = unit[2]

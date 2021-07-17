@@ -166,9 +166,9 @@ ui <- navbarPage(
     tabPanel(
       "Spacing",
       tabsetPanel(
-        tabPanel("All", uiOutput("panel.spacing")),
-        tabPanel("X", uiOutput("panel.spacing.x")),
-        tabPanel("Y", uiOutput("panel.spacing.y"))
+        tabPanel("Both", uiOutput("panel.spacing")),
+        tabPanel("Horizontal", uiOutput("panel.spacing.x")),
+        tabPanel("Vertical", uiOutput("panel.spacing.y"))
       )
     ),
     ## Panel - Grid ----

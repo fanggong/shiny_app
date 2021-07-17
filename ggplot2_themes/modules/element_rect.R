@@ -6,10 +6,10 @@ element_rect_ui <- function(id) {
   
   sidebarLayout(
     sidebarPanel = sidebarPanel(
-      shinyWidgets::prettyCheckbox(
+      shinyWidgets::materialSwitch(
         ns("set_to_blank"), label = strong("Assigns no space to the element"),
         value = inherits(args, "element_blank"),
-        status = "primary", shape = "round"
+        status = "primary", right = TRUE
       ),
       hr(),
       fluidRow(
@@ -47,7 +47,7 @@ element_rect_ui <- function(id) {
       ),
       fluidRow(
         column(6, shinyWidgets::radioGroupButtons(
-          ns("linetype_type"), "Border LineType", choices = c("NA", "NULL", "Value"),
+          ns("linetype_type"), "Border LineType", choices = c("NULL", "Value"),
           selected = .get_attr_type(args$linetype),
           justified = TRUE, width = "100%"
         )),
