@@ -1,225 +1,207 @@
+LINEEND <- c("round", "butt", "square")
+ARROW_ENDS <- c("first", "last", "both")
+ARROW_TYPE <- c("open", "closed")
 
 element_line_ui <- function(id) {
   ns <- NS(id)
   
   args <- theme_init[[id]]
   
-  if (inherits(args, "arrow")) {
-    arrow_angle <- args$arrow$angle
-    arrow_length <- as.character(args$arrow$length)
-    arrow_length_value <- stringr::str_match(arrow_length, "[0-9.]+")
-    arrow_length_unit <- stringr::str_match(arrow_length, "[^0-9.]+")
-    arrow_ends <- args$arrow$ends
-    arrow_type <- args$arrow$type
+  if (!inherits(args$arrow, "arrow")) {
+    arrow <- arrow()
   } else {
-    arrow_angle <- 30
-    arrow_length_value <- 0.25
-    arrow_length_unit <- "inches"
-    arrow_ends <- "last"
-    arrow_type <- "open"
+    arrow <- args$arrow
   }
   
   sidebarLayout(
     sidebarPanel = sidebarPanel(
       shinyWidgets::materialSwitch(
-        ns("set_to_blank"), label = strong("Assigns no space to the element"),
+        ns("set_to_blank"), 
+        label = strong("Assigns no space to the element"),
         value = inherits(args, "element_blank"),
-        status = "primary", right = TRUE
+        status = "primary", 
+        right = TRUE
       ),
       hr(),
-      fluidRow(
-        column(6, shinyWidgets::radioGroupButtons(
-          ns("colour_type"), "Line Colour", choices = c("NA", "NULL", "Value"),
-          selected = .get_attr_type(args$colour),
-          justified = TRUE, width = "100%"
-        )),
-        column(6, colourpicker::colourInput(
-          ns("colour"), label = br(), value = args$colour
-        ))
+      # colour ----
+      shinyWidgets::radioGroupButtons(
+        ns("colour_type"), 
+        label = "Line Colour", 
+        choices = .types(),
+        selected = .get_attr_type(args$colour),
+        justified = TRUE, 
+        width = "100%"
+      ),
+      colourpicker::colourInput(
+        ns("colour"),
+        label = NULL, 
+        value = .set_default(args$colour, "#000000")
+      ),
+      hr(),
+      # size ----
+      shinyWidgets::radioGroupButtons(
+        ns("size_type"), 
+        label = "Line Size", 
+        choices = .types(),
+        selected = .get_attr_type(args$size), 
+        justified = TRUE, 
+        width = "100%"
       ),
       fluidRow(
-        column(6, shinyWidgets::radioGroupButtons(
-          ns("size_type"), "Line Size", choices = c("NA", "NULL", "Value"),
-          selected = .get_attr_type(args$size), 
-          justified = TRUE, width = "100%"
+        column(8, selectInput(
+          ns("size_unit"),
+          label = NULL,
+          choices = c(
+            "Relative Value" = "rel",
+            "Absolute Value in mm" = "identity"
+          ),
+          selected = ifelse(inherits(args$size, "rel"), "rel", "identity")
         )),
-        column(6, shinyWidgets::numericInputIcon(
-          ns("size"), label = br(), 
-          value = args$size, 
-          min = 0, step = 0.1,
-          icon = list("mm")
+        column(4, numericInput(
+          ns("size_value"), 
+          label = NULL, 
+          value = .set_default(args$size, 1), 
+          min = 0, 
+          step = 0.1,
         ))
       ),
-      fluidRow(
-        column(6, shinyWidgets::radioGroupButtons(
-          ns("linetype_type"), "Line Type", choices = c("NULL", "Value"),
-          selected = .get_attr_type(args$linetype),
-          justified = TRUE, width = "100%"
-        )),
-        column(6, textInput(
-          ns("linetype"), label = br(), value = args$linetype
-        ))
+      hr(),
+      # linetype ----
+      shinyWidgets::radioGroupButtons(
+        ns("linetype_type"), 
+        label = "Line Type", 
+        choices = .types(),
+        selected = .get_attr_type(args$linetype),
+        justified = TRUE, 
+        width = "100%"
+      ),
+      textInput(
+        ns("linetype"), 
+        label = NULL,
+        value = .set_default(args$linetype, 0)
+      ),
+      hr(),
+      # lineend ----
+      shinyWidgets::radioGroupButtons(
+        ns("lineend_type"), 
+        label = "Line End Style", 
+        choices = .types(),
+        selected = .get_attr_type(args$lineend),
+        justified = TRUE, 
+        width = "100%"
+      ),
+      selectInput(
+        ns("lineend"), 
+        label = NULL, 
+        choices = LINEEND, 
+        selected = .set_default(args$lineend, LINEEND[1]), 
+      ),
+      hr(),
+      # arrow ----
+      shinyWidgets::radioGroupButtons(
+        ns("arrow_type"), 
+        label = "Arrow", 
+        choices = .types(),
+        selected = .get_attr_type(args$arrow),
+        justified = TRUE,
+        width = "100%"
       ),
       fluidRow(
-        column(6, shinyWidgets::radioGroupButtons(
-          ns("lineend_type"), "Line End Style", choices = c("NULL", "Value"),
-          selected = .get_attr_type(args$lineend),
-          justified = TRUE, width = "100%"
+        column(4, numericInput(
+          ns("angle"), 
+          label = "angle", 
+          value = arrow$angle,
+          step = 1
         )),
-        column(6, selectInput(
-          ns("lineend"), label = br(), choices = LINEEND, selected = args$lineend, 
-        ))
-      ),
-      fluidRow(
-        column(6, shinyWidgets::radioGroupButtons(
-          ns("arrow_type"), "Arrow", choices = c("NA", "NULL", "Value"),
-          selected = .get_attr_type(args$arrow),
-          justified = TRUE, width = "100%"
+        column(4, selectInput(
+          ns("ends"), 
+          label = "ends", 
+          choices = ARROW_ENDS, 
+          selected = arrow$ends
+        )),
+        column(4, selectInput(
+          ns("type"), 
+          label = "type", 
+          choices = ARROW_TYPE, 
+          selected = arrow$type
         ))
       ),
       fluidRow(
         column(4, numericInput(
-          ns("angle"), "angle", value = arrow_angle, step = 1
-        )),
-        column(4, numericInput(
-          ns("value"), "length", value = as.numeric(arrow_length_value)
+          ns("value"), 
+          label = "length", 
+          value = as.numeric(stringr::str_match(as.character(arrow$length), "[0-9.]+"))
         )),
         column(4, selectInput(
-          ns("unit"), label = br(), choices = UNITS, selected = arrow_length_unit
+          ns("unit"), 
+          label = br(), 
+          choices = UNITS, 
+          selected = stringr::str_match(as.character(arrow$length), "[^0-9.]+")
         ))
-      ),
-      fluidRow(
-        column(4, selectInput(
-          ns("ends"), "ends", choices = ARROW_ENDS, selected = arrow_ends
-        )),
-        column(4, selectInput(
-          ns("type"), "type", choices = ARROW_TYPE, selected = arrow_type
-        ))
-      ),
-      shinyWidgets::prettyCheckbox(
-        ns("inherit.blank"), label = strong("inherit blank from parents"),
-        value = args$inherit.blank,
-        status = "primary", shape = "round"
-      ),
-      width = 4
+      )
     ),
     mainPanel = mainPanel(
-      plotOutput(ns("plot"), height = "600px") %>% shinycssloaders::withSpinner(),
-      verbatimTextOutput(ns("theme"), placeholder = TRUE)
+      plotOutput(ns("plot"), height = HEIGHT) %>% 
+        shinycssloaders::withSpinner()
     )
   )
 }
 
-element_line_server <- function(id) {
+element_line_server <- function(id, graph) {
   moduleServer(
     id, 
     function(input, output, session) {
       
-      attrs <- c("colour", "size", "linetype", "lineend")
-      attrs_type <- paste0(attrs, "_type")
-      append_attrs <- c("arrow_type", "angle", "value", "unit", "ends", "type")
+      attrs <- list(
+        "colour_type" = "colour",
+        "size_type" = c("size_unit", "size_value"),
+        "linetype_type" = "linetype",
+        "lineend_type" = "lineend",
+        "arrow_type" = c("angle", "ends", "type", "value", "unit")
+      )
       
-      # enable and disable all the attrs and attrs_type
       observeEvent(input$set_to_blank, {
         if (input$set_to_blank) {
-          for (each in c(attrs, attrs_type, append_attrs))  {
-            shinyjs::disable(each)
-          }
-          shinyjs::disable("inherit.blank")
-        } else {
-          for (each in attrs_type)  {
-            shinyjs::enable(each)
-            if (input[[each]] == "Value") {
-              shinyjs::enable(attrs[which(attrs_type == each)])
-            }
-          }
-          shinyjs::enable(append_attrs[1])
-          if (input[[append_attrs[1]]] == "Value") {
-            for (each in append_attrs[-1]) {
-              shinyjs::enable(each)
-            }
-          }
-          shinyjs::enable("inherit.blank")
-        }
-      })
-      
-      # enable and disable all the attrs according to attrs_type
-      lapply(1:length(attrs), function(idx) {
-        observeEvent(input[[attrs_type[idx]]], {
-          if (input[[attrs_type[idx]]] %in% c("NULL", "NA")) {
-            shinyjs::disable(attrs[idx])
-          } else {
-            shinyjs::enable(attrs[idx])
-          }
-        })
-      })
-      observeEvent(input[[append_attrs[1]]], {
-        if (input[[append_attrs[1]]] %in% c("NULL", "NA")) {
-          for (each in append_attrs[-1]) {
+          for (each in c(names(attrs), unlist(attrs)))  {
             shinyjs::disable(each)
           }
         } else {
-          for (each in append_attrs[-1]) {
-            shinyjs::enable(each)
+          for (controler in names(attrs)) {
+            shinyjs::enable(controler)
+            if (input[[controler]] == .types(3)) {
+              for (element in attrs[[controler]]) {
+                shinyjs::enable(element)
+              }
+            }
           }
         }
       })
       
-      # reactive new theme
+      mapply(.toggle_controler, names(attrs), attrs, list(input = input))
+      
       new_theme[[id]] <- reactive({
         if (input$set_to_blank) {
           return(element_blank())
         }
-
-        for (idx in 1:length(attrs)) {
-          if (input[[attrs_type[idx]]] == "NULL") {
-            assign(attrs[idx], NULL)
-          } else if (input[[attrs_type[idx]]] == "NA") {
-            assign(attrs[idx], NA)
-          } else {
-            assign(attrs[idx], input[[attrs[idx]]])
-          }
-        }
-
-        if (!is.null(linetype)) {
-          if (linetype %in% as.character(0:8)) {
-            linetype <- as.numeric(linetype)
-          }
-        }
         
-        result <- element_line(
+        .assign(names(attrs), input)
+        
+        element_line(
           colour = colour,
           size = size,
           linetype = linetype,
           lineend = lineend,
-          inherit.blank = input$inherit.blank
+          arrow = arrow
         )
-        
-        if (input$arrow_type == "NULL") {
-          result["arrow"] <- list(NULL)
-        } else if (input$arrow_type == "NA") {
-          result["arrow"] <- list(FALSE)
-        } else {
-          result["arrow"] <- list(arrow(
-            angle = input$angle, length = unit(input$value, input$unit),
-            ends = input$ends, type = input$type
-          ))
-        }
-        
-        result
       })
       
       output$theme <- renderPrint({
         .reactiveValues_to_theme(new_theme)
-        # arrow(
-        #   angle = input$angle, length = unit(input$value, input$unit),
-        #   ends = input$ends, type = input$type
-        # )
       })
       
       output$plot <- renderCachedPlot({
-        plot + .reactiveValues_to_theme(new_theme)
-      }, cacheKeyExpr = .reactiveValues_to_theme(new_theme))
+        .get_plot(graph)
+      }, cacheKeyExpr = .cache_key(graph))
     }
   )
 } 

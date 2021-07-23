@@ -7,143 +7,142 @@ element_rect_ui <- function(id) {
   sidebarLayout(
     sidebarPanel = sidebarPanel(
       shinyWidgets::materialSwitch(
-        ns("set_to_blank"), label = strong("Assigns no space to the element"),
+        ns("set_to_blank"), 
+        label = strong("Assigns no space to the element"),
         value = inherits(args, "element_blank"),
-        status = "primary", right = TRUE
+        status = "primary", 
+        right = TRUE
       ),
       hr(),
-      fluidRow(
-        column(6, shinyWidgets::radioGroupButtons(
-          ns("fill_type"), "Fill Colour", choices = c("NA", "NULL", "Value"),
-          selected = .get_attr_type(args$fill),
-          justified = TRUE, width = "100%"
-        )),
-        column(6, colourpicker::colourInput(
-          ns("fill"), label = br(), value = args$fill
-        ))
+      # fill ----
+      shinyWidgets::radioGroupButtons(
+        ns("fill_type"), 
+        label = "Fill Colour", 
+        choices = .types(),
+        selected = .get_attr_type(args$fill),
+        justified = TRUE, 
+        width = "100%"
+      ),
+      colourpicker::colourInput(
+        ns("fill"), 
+        label = NULL, 
+        value = .set_default(args$fill, "#000000")
+      ),
+      hr(),
+      # colour ----
+      shinyWidgets::radioGroupButtons(
+        ns("colour_type"), 
+        label = "Border Colour", 
+        choices = .types(),
+        selected = .get_attr_type(args$colour),
+        justified = TRUE, 
+        width = "100%"
+      ),
+      colourpicker::colourInput(
+        ns("colour"), 
+        label = NULL, 
+        value = .set_default(args$colour, "#000000")
+      ),
+      hr(),
+      # size ----
+      shinyWidgets::radioGroupButtons(
+        ns("size_type"), 
+        label = "Border Size", 
+        choices = .types(),
+         selected = .get_attr_type(args$size), 
+        justified = TRUE, 
+        width = "100%"
       ),
       fluidRow(
-        column(6, shinyWidgets::radioGroupButtons(
-          ns("colour_type"), "Border Colour", choices = c("NA", "NULL", "Value"),
-          selected = .get_attr_type(args$colour),
-          justified = TRUE, width = "100%"
+        column(8, selectInput(
+          ns("size_unit"),
+          label = NULL,
+          choices = c(
+            "Relative Value" = "rel",
+            "Absolute Value in mm" = "identity"
+          ),
+          selected = ifelse(inherits(args$size, "rel"), "rel", "identity")
         )),
-        column(6, colourpicker::colourInput(
-          ns("colour"), label = br(), value = args$colour
+        column(4, numericInput(
+          ns("size_value"), 
+          label = NULL, 
+          value = .set_default(args$size, 1), 
+          min = 0, 
+          step = 0.1,
         ))
       ),
-      fluidRow(
-        column(6, shinyWidgets::radioGroupButtons(
-          ns("size_type"), "Border Size", choices = c("NA", "NULL", "Value"),
-           selected = .get_attr_type(args$size), 
-          justified = TRUE, width = "100%"
-        )),
-        column(6, shinyWidgets::numericInputIcon(
-          ns("size"), label = br(), 
-          value = args$size, 
-          min = 0, step = 0.1,
-          icon = list("mm")
-        ))
+      hr(),
+      # linetype ----
+      shinyWidgets::radioGroupButtons(
+        ns("linetype_type"), 
+        label = "Border LineType", 
+        choices = .types(),
+        selected = .get_attr_type(args$linetype),
+        justified = TRUE, 
+        width = "100%"
       ),
-      fluidRow(
-        column(6, shinyWidgets::radioGroupButtons(
-          ns("linetype_type"), "Border LineType", choices = c("NULL", "Value"),
-          selected = .get_attr_type(args$linetype),
-          justified = TRUE, width = "100%"
-        )),
-        column(6, textInput(
-          ns("linetype"), label = br(), value = args$linetype
-        ))
-      ),
-      shinyWidgets::prettyCheckbox(
-        ns("inherit.blank"), label = strong("inherit blank from parents"),
-        value = args$inherit.blank,
-        status = "primary", shape = "round"
-      ),
-      width = 4
+      textInput(
+        ns("linetype"), 
+        label = NULL, 
+        value = .set_default(args$linetype, 0)
+      )
     ),
     mainPanel = mainPanel(
-      plotOutput(ns("plot"), height = "600px") %>% shinycssloaders::withSpinner(),
-      verbatimTextOutput(ns("theme"), placeholder = TRUE)
+      plotOutput(ns("plot"), height = HEIGHT) %>% 
+        shinycssloaders::withSpinner()
     )
   )
 }
 
-element_rect_server <- function(id) {
+element_rect_server <- function(id, graph) {
   moduleServer(
     id, 
     function(input, output, session) {
       
-      attrs <- c("fill", "colour", "size", "linetype")
-      attrs_type <- paste0(attrs, "_type")
+      attrs <- list(
+        "fill_type" = "fill",
+        "colour_type" = "colour",
+        "size_type" = "size",
+        "linetype_type" = "linetype"
+      )
     
-      # enable and disable all the attrs and attrs_type
       observeEvent(input$set_to_blank, {
         if (input$set_to_blank) {
-          for (each in c(attrs, attrs_type))  {
+          for (each in c(names(attrs), unlist(attrs)))  {
             shinyjs::disable(each)
           }
-          shinyjs::disable("inherit.blank")
         } else {
-          for (each in attrs_type)  {
-            shinyjs::enable(each)
-            if (input[[each]] == "Value") {
-              shinyjs::enable(attrs[which(attrs_type == each)])
+          for (controler in names(attrs)) {
+            shinyjs::enable(controler)
+            if (input[[controler]] == .types(3)) {
+              for (element in attrs[[controler]]) {
+                shinyjs::enable(element)
+              }
             }
           }
-          shinyjs::enable("inherit.blank")
         }
       })
       
-      # enable and disable all the attrs according to attrs_type
-      lapply(1:length(attrs), function(idx) {
-        observeEvent(input[[attrs_type[idx]]], {
-          if (input[[attrs_type[idx]]] %in% c("NULL", "NA")) {
-            shinyjs::disable(attrs[idx])
-          } else {
-            shinyjs::enable(attrs[idx])
-          }
-        })
-      })
+      mapply(.toggle_controler, names(attrs), attrs, list(input = input))
       
-      # reactive new theme
       new_theme[[id]] <- reactive({
         if (input$set_to_blank) {
           return(element_blank())
         }
         
-        for (idx in 1:length(attrs)) {
-          if (input[[attrs_type[idx]]] == "NULL") {
-            assign(attrs[idx], NULL)
-          } else if (input[[attrs_type[idx]]] == "NA") {
-            assign(attrs[idx], NA)
-          } else {
-            assign(attrs[idx], input[[attrs[idx]]])
-          }
-        }
-        
-        if (!is.null(linetype)) {
-          if (linetype %in% as.character(0:8)) {
-            linetype <- as.numeric(linetype)
-          }
-        }
+        .assign(names(attrs), input)
         
         element_rect(
           fill = fill,
           colour = colour,
           size = size,
-          linetype = linetype,
-          inherit.blank = input$inherit.blank
+          linetype = linetype
         )
       })
       
-      output$theme <- renderPrint({
-        .reactiveValues_to_theme(new_theme)
-      })
-      
       output$plot <- renderCachedPlot({
-        plot + .reactiveValues_to_theme(new_theme)
-      }, cacheKeyExpr = .reactiveValues_to_theme(new_theme))
+        .get_plot(graph)
+      }, cacheKeyExpr = .cache_key(graph))
     }
   )
 } 

@@ -1,3 +1,5 @@
+TITLE_POS <- c("panel", "plot")
+
 element_title_position_ui <- function(id) {
   ns <- NS(id)
   
@@ -5,51 +7,48 @@ element_title_position_ui <- function(id) {
   
   sidebarLayout(
     sidebarPanel = sidebarPanel(
-      fluidRow(
-        column(6, shinyWidgets::radioGroupButtons(
-          ns("title_position_type"), "Title Position", choices = c("NULL", "Value"),
-          selected = .get_attr_type(args),
-          justified = TRUE, width = "100%"
-        )),
-        column(6, selectInput(
-          ns("title_position"), label = br(), choices = TITLE_POS,
-          selected = args, width = "100%"
-        ))
+      shinyWidgets::radioGroupButtons(
+        ns("title_position_type"), 
+        label = "Position", 
+        choices = .types(),
+        selected = .get_attr_type(args),
+        justified = TRUE, 
+        width = "100%"
+      ),
+      selectInput(
+        ns("title_position"),
+        label = NULL, 
+        choices = TITLE_POS,
+        selected = .set_default(args, TITLE_POS[1]), 
+        width = "100%"
       )
     ),
     mainPanel = mainPanel(
-      plotOutput(ns("plot"), height = "600px") %>% shinycssloaders::withSpinner(),
-      verbatimTextOutput(ns("theme"), placeholder = TRUE)
+      plotOutput(ns("plot"), height = HEIGHT) %>% 
+        shinycssloaders::withSpinner()
     )
   )
 }
 
-element_title_position_server <- function(id) {
+element_title_position_server <- function(id, graph) {
   moduleServer(
     id,
     function(input, output, session) {
-      observeEvent(input$title_position_type, {
-        if (input$title_position_type == "NULL") {
-          shinyjs::disable("title_position")
-        } else {
-          shinyjs::enable("title_position")
-        }
-      })
+      
+      attrs <- list(
+        "title_position_type" = "title_position"
+      )
+      
+      mapply(.toggle_controler, names(attrs), attrs, list(input = input))
       
       new_theme[[id]] <- reactive({
-        if (input$title_position_type == "NULL") {
-          return(NULL)
-        }
-        element_title_position(title_position = input$title_position)
-      })
-      
-      output$theme <- renderPrint({
-        .reactiveValues_to_theme(new_theme)
+        .assign(names(attrs), input)
+        element_title_position(title_position = title_position)
       })
       
       output$plot <- renderCachedPlot({
-        plot + .reactiveValues_to_theme(new_theme)
-      }, cacheKeyExpr = .reactiveValues_to_theme(new_theme))
+        .get_plot(graph)
+      }, cacheKeyExpr = .cache_key(graph))
     }
   )
 }

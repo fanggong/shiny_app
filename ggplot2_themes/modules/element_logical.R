@@ -5,21 +5,22 @@ element_logical_ui <- function(id) {
   
   sidebarLayout(
     sidebarPanel = sidebarPanel(
-      fluidRow(
-        column(12, shinyWidgets::materialSwitch(
-          ns("logical"), label = strong("Set the element to TRUE"),
-          value = args, status = "primary", right = TRUE
-        ))
+      shinyWidgets::materialSwitch(
+        ns("logical"), 
+        label = strong("Set the element to TRUE"),
+        value = args, 
+        status = "primary", 
+        right = TRUE
       )
     ),
     mainPanel = mainPanel(
-      plotOutput(ns("plot"), height = "600px") %>% shinycssloaders::withSpinner(),
-      verbatimTextOutput(ns("theme"), placeholder = TRUE)
+      plotOutput(ns("plot"), height = HEIGHT) %>% 
+        shinycssloaders::withSpinner()
     )
   )
 }
 
-element_logical_server <- function(id) {
+element_logical_server <- function(id, graph) {
   moduleServer(
     id,
     function(input, output, session) {
@@ -28,13 +29,9 @@ element_logical_server <- function(id) {
         element_logical(logical = input$logical)
       })
       
-      output$theme <- renderPrint({
-        .reactiveValues_to_theme(new_theme)
-      })
-      
       output$plot <- renderCachedPlot({
-        plot + .reactiveValues_to_theme(new_theme)
-      }, cacheKeyExpr = .reactiveValues_to_theme(new_theme))
+        .get_plot(graph)
+      }, cacheKeyExpr = .cache_key(graph))
     }
   )
 }

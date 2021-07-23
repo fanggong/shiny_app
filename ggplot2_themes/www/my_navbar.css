@@ -1,5 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500;700&family=ZCOOL+XiaoWei&display=swap');
 
+:root {
+  --well-panel-height: 620
+}
 body {
   font-family: 'Fira Mono';
 }
@@ -26,6 +29,11 @@ h5 {
 
 h6 {
   font-family: 'Fira Mono';
+}
+
+.well {
+  height: calc(var(--well-panel-height) * 1px);
+  overflow-y: scroll;
 }
 
 

@@ -1,55 +1,92 @@
+TAG_POS <- c("topleft", "top", "topright", "left", "right", "bottomleft", "bottom")
+
 element_tag_position_ui <- function(id) {
   ns <- NS(id)
   
   args <- theme_init[[id]]
   
+  position <- args
+  coord_str <- args
+  coord_num <- args
+  if (.get_attr_type(args) == .types(3)) {
+    if (length(args) == 1) {
+      position <- "string"
+      coord_num <- NULL
+    } else {
+      position <- "numeric"
+      coord_str <- NULL
+    }
+  }
+  
   sidebarLayout(
     sidebarPanel = sidebarPanel(
-      fluidRow(
-        column(6, shinyWidgets::radioGroupButtons(
-          ns("tag_position_type"), "Tag Position", choices = c("NULL", "Value"),
-          selected = .get_attr_type(args),
-          justified = TRUE, width = "100%"
-        )),
-        column(6, selectInput(
-          ns("tag_position"), label = br(), choices = TAG_POS,
-          selected = args, width = "100%"
-        ))
+      shinyWidgets::radioGroupButtons(
+        ns("position_type"), 
+        label = "Position", 
+        choices = .types(),
+        selected = .get_attr_type(args),
+        justified = TRUE, 
+        width = "100%"
+      ),
+      selectInput(
+        ns("position"), 
+        label = NULL, 
+        choices = c("use one-element string" = "string", 
+                    "use two-element numeric" = "numeric"),
+        selected = .set_default(position, "string"), 
+        width = "100%"
+      ),
+      conditionalPanel(
+        condition = "input.position == 'string'", ns = ns,
+        selectInput(
+          ns("position_xy"),
+          label = NULL,
+          choices = TAG_POS,
+          selected = .set_default(coord_str, TAG_POS[1])
+        )
+      ),
+      conditionalPanel(
+        condition = "input.position == 'numeric'", ns = ns,
+        fluidRow(
+          column(6, numericInput(
+            ns("position_x"),
+            label = "horizontal",
+            value = .set_default(coord_num[1], 0.5)
+          )),
+          column(6, numericInput(
+            ns("position_y"),
+            label = "vertical",
+            value = .set_default(coord_num[2], 0.5)
+          ))
+        )
       )
     ),
     mainPanel = mainPanel(
-      plotOutput(ns("plot"), height = "600px") %>% shinycssloaders::withSpinner(),
-      verbatimTextOutput(ns("theme"), placeholder = TRUE)
+      plotOutput(ns("plot"), height = HEIGHT) %>% 
+        shinycssloaders::withSpinner()
     )
   )
 }
 
-element_tag_position_server <- function(id) {
+element_tag_position_server <- function(id, graph) {
   moduleServer(
     id,
     function(input, output, session) {
-      observeEvent(input$tag_position_type, {
-        if (input$tag_position_type == "NULL") {
-          shinyjs::disable("tag_position")
-        } else {
-          shinyjs::enable("tag_position")
-        }
-      })
+      
+      attrs <- list(
+        "position_type" = c("position", "position_x", "position_y", "position_xy")
+      )
+      
+      mapply(.toggle_controler, names(attrs), attrs, list(input = input))
       
       new_theme[[id]] <- reactive({
-        if (input$tag_position_type == "NULL") {
-          return(NULL)
-        }
-        element_tag_position(tag_position = input$tag_position)
-      })
-      
-      output$theme <- renderPrint({
-        .reactiveValues_to_theme(new_theme)
+        .assign(names(attrs), input)
+        element_tag_position(tag_position = position)
       })
       
       output$plot <- renderCachedPlot({
-        plot + .reactiveValues_to_theme(new_theme)
-      }, cacheKeyExpr = .reactiveValues_to_theme(new_theme))
+        .get_plot(graph)
+      }, cacheKeyExpr = .cache_key(graph))
     }
   )
 }

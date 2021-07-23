@@ -1,3 +1,5 @@
+PLACEMENT <- c("inside", "outside")
+
 element_placement_ui <- function(id) {
   ns <- NS(id)
   
@@ -5,51 +7,48 @@ element_placement_ui <- function(id) {
   
   sidebarLayout(
     sidebarPanel = sidebarPanel(
-      fluidRow(
-        column(6, shinyWidgets::radioGroupButtons(
-          ns("placement_type"), "Placement", choices = c("NULL", "Value"),
-          selected = .get_attr_type(args),
-          justified = TRUE, width = "100%"
-        )),
-        column(6, selectInput(
-          ns("placement"), label = br(), choices = PLACEMENT,
-          selected = args, width = "100%"
-        ))
+      shinyWidgets::radioGroupButtons(
+        ns("placement_type"), 
+        label = "Placement", 
+        choices = .types(),
+        selected = .get_attr_type(args),
+        justified = TRUE,
+        width = "100%"
+      ),
+      selectInput(
+        ns("placement"), 
+        label = NULL, 
+        choices = PLACEMENT,
+        selected = .set_default(args, PLACEMENT[1]), 
+        width = "100%"
       )
     ),
     mainPanel = mainPanel(
-      plotOutput(ns("plot"), height = "600px") %>% shinycssloaders::withSpinner(),
-      verbatimTextOutput(ns("theme"), placeholder = TRUE)
+      plotOutput(ns("plot"), height = HEIGHT) %>% 
+        shinycssloaders::withSpinner()
     )
   )
 }
 
-element_placement_server <- function(id) {
+element_placement_server <- function(id, graph) {
   moduleServer(
     id,
     function(input, output, session) {
-      observeEvent(input$placement_type, {
-        if (input$placement_type == "NULL") {
-          shinyjs::disable("placement")
-        } else {
-          shinyjs::enable("placement")
-        }
-      })
+      
+      attrs <- list(
+        "placement_type" = "placement"
+      )
+      
+      mapply(.toggle_controler, names(attrs), attrs, list(input = input))
       
       new_theme[[id]] <- reactive({
-        if (input$placement_type == "NULL") {
-          return(NULL)
-        }
-        element_placement(placement = input$placement)
-      })
-      
-      output$theme <- renderPrint({
-        .reactiveValues_to_theme(new_theme)
+        .assign(names(attrs), input)
+        element_placement(placement = placement)
       })
       
       output$plot <- renderCachedPlot({
-        plot + .reactiveValues_to_theme(new_theme)
-      }, cacheKeyExpr = .reactiveValues_to_theme(new_theme))
+        .get_plot(graph)
+      }, cacheKeyExpr = .cache_key(graph))
     }
   )
 }

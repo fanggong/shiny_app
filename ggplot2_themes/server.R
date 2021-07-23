@@ -1,20 +1,16 @@
 server <- function(input, output, session) {
   
-  # output$own_data <- renderUI({
-  #   h3("Developing...")
-  # })
-  # 
-  # output$sample_data <- renderUI({
-  #   h3("Developing...")
-  # })
+  sample_graph <- header_server()
+  default_setting_server()
+  own_setting_server()
   
   for (ele in names(ele_config)) {
     eval(parse(text = sprintf(
       "output$%s <- renderUI({
+        do.call(%s, args = list(id = \"%s\", graph = sample_graph))
         do.call(%s, args = list(id = \"%s\"))
-        do.call(%s, args = list(id = \"%s\"))
-      })", 
-      ele, 
+      })",
+      ele,
       paste0(ele_config[[ele]], "_server"), ele,
       paste0(ele_config[[ele]], "_ui"), ele
     )))

@@ -1,234 +1,282 @@
+FONT_FACE <- c("plain", "italic", "bold", "bold.italic")
+
 element_text_ui <- function(id) {
   ns <- NS(id)
   
   args <- theme_init[[id]]
   
-  if (!is.null(args$margin)) {
-    margin <- as.character(args$margin)
-    value <- stringr::str_match(margin, "[0-9.]+")
-    unit <- stringr::str_match(margin, "[^0-9.]+")
-  } else {
-    value <- rep(0, 4)
-    unit <- rep("points", 4)
-  }
+  value <- stringr::str_match(as.character(args$margin), "[0-9.]+")
+  unit <- stringr::str_match(as.character(args$margin), "[^0-9.]+")
   
   sidebarLayout(
     sidebarPanel = sidebarPanel(
       shinyWidgets::materialSwitch(
-        ns("set_to_blank"), label = strong("Assigns no space to the element"),
+        ns("set_to_blank"), 
+        label = strong("Assigns no space to the element"),
         value = inherits(args, "element_blank"),
-        status = "primary", right = TRUE
+        status = "primary",
+        right = TRUE
       ),
       hr(),
-      fluidRow(
-        column(6, shinyWidgets::radioGroupButtons(
-          ns("family_type"), "Font Family", choices = c("NA", "NULL", "Value"),
-          selected = .get_attr_type(args$family),
-          justified = TRUE, width = "100%"
-        )),
-        column(6, textInput(
-          ns("family"), label = br(), value = args$family
-        ))
+      # family ----
+      shinyWidgets::radioGroupButtons(
+        ns("family_type"), 
+        label = "Font Family", 
+        choices = .types(),
+        selected = .get_attr_type(args$family),
+        justified = TRUE, 
+        width = "100%"
+      ),
+      textInput(
+        ns("family"), 
+        label = NULL, 
+        value = .set_default(args$family, "")
+      ),
+      hr(),
+      # face ----
+      shinyWidgets::radioGroupButtons(
+        ns("face_type"), 
+        label = "Font Face", 
+        choices = .types(),
+        selected = .get_attr_type(args$face),
+        justified = TRUE, 
+        width = "100%"
+      ),
+      selectInput(
+        ns("face"), 
+        label = NULL, 
+        choices = FONT_FACE, 
+        selected = .set_default(args$face, FONT_FACE[1])
+      ),
+      hr(),
+      # colour ----
+      shinyWidgets::radioGroupButtons(
+        ns("colour_type"), 
+        label = "Text Colour", 
+        choices = .types(),
+        selected = .get_attr_type(args$colour),
+        justified = TRUE,
+        width = "100%"
+      ),
+      colourpicker::colourInput(
+        ns("colour"), 
+        label = NULL, 
+        value = .set_default(args$colour, "#000000")
+      ),
+      hr(),
+      # size ----
+      shinyWidgets::radioGroupButtons(
+        ns("size_type"), 
+        label = "Text Size", 
+        choices = .types(),
+        selected = .get_attr_type(args$size), 
+        justified = TRUE,
+        width = "100%"
       ),
       fluidRow(
-        column(6, shinyWidgets::radioGroupButtons(
-          ns("face_type"), "Font Face", choices = c("NULL", "Value"),
-          selected = .get_attr_type(args$face),
-          justified = TRUE, width = "100%"
+        column(8, selectInput(
+          ns("size_unit"),
+          label = NULL,
+          choices = c(
+            "Relative Value" = "rel",
+            "Absolute Value in pts" = "identity"
+          ),
+          selected = ifelse(inherits(args$size, "rel"), "rel", "identity")
         )),
-        column(6, selectInput(
-          ns("face"), label = br(), choices = FONT_FACE, selected = args$face
+        column(4, numericInput(
+          ns("size_value"), 
+          label = NULL, 
+          value = .set_default(args$size, 3), 
+          min = 0, 
+          step = 0.1,
         ))
       ),
-      fluidRow(
-        column(6, shinyWidgets::radioGroupButtons(
-          ns("colour_type"), "Text Colour", choices = c("NA", "NULL", "Value"),
-          selected = .get_attr_type(args$colour),
-          justified = TRUE, width = "100%"
-        )),
-        column(6, colourpicker::colourInput(
-          ns("colour"), label = br(), value = args$colour
-        ))
+      hr(),
+      # hjust ----
+      shinyWidgets::radioGroupButtons(
+        ns("hjust_type"), 
+        label = "Justification (H)", 
+        choices = .types(),
+        selected = .get_attr_type(args$hjust),
+        justified = TRUE, 
+        width = "100%"
       ),
-      fluidRow(
-        column(6, shinyWidgets::radioGroupButtons(
-          ns("size_type"), "Text Size", choices = c("NULL", "Value"),
-          selected = .get_attr_type(args$size), 
-          justified = TRUE, width = "100%"
-        )),
-        column(6, shinyWidgets::numericInputIcon(
-          ns("size"), label = br(), 
-          value = args$size, 
-          min = 0, step = 0.1,
-          icon = list("pts")
-        ))
+      numericInput(
+        ns("hjust"), 
+        label = NULL, 
+        value = .set_default(args$hjust, 0.5), 
+        step = 0.1, 
+        min = 0, 
+        max = 1
       ),
-      fluidRow(
-        column(6, shinyWidgets::radioGroupButtons(
-          ns("hjust_type"), "Justification (H)", choices = c("NA", "NULL", "Value"),
-          selected = .get_attr_type(args$hjust),
-          justified = TRUE, width = "100%"
-        )),
-        column(6, numericInput(
-          ns("hjust"), label = br(), value = args$hjust, step = 0.1, min = 0, max = 1
-        ))
+      hr(),
+      # vjust ----
+      shinyWidgets::radioGroupButtons(
+        ns("vjust_type"), 
+        label = "Justification (V)", 
+        choices = .types(),
+        selected = .get_attr_type(args$vjust),
+        justified = TRUE,
+        width = "100%"
       ),
-      fluidRow(
-        column(6, shinyWidgets::radioGroupButtons(
-          ns("vjust_type"), "Justification (V)", choices = c("NA", "NULL", "Value"),
-          selected = .get_attr_type(args$vjust),
-          justified = TRUE, width = "100%"
-        )),
-        column(6, numericInput(
-          ns("vjust"), label = br(), value = args$vjust, step = 0.1, min = 0, max = 1
-        ))
+      numericInput(
+        ns("vjust"), 
+        label = NULL, 
+        value = .set_default(args$vjust, 0.5), 
+        step = 0.1, 
+        min = 0, 
+        max = 1
       ),
-      fluidRow(
-        column(6, shinyWidgets::radioGroupButtons(
-          ns("angle_type"), "Angle", choices = c("NA", "NULL", "Value"),
-          selected = .get_attr_type(args$angle),
-          justified = TRUE, width = "100%"
-        )),
-        column(6, numericInput(
-          ns("angle"), label = br(), value = args$angle, step = 1, min = 0, max = 360
-        ))
+      hr(),
+      # angle ----
+      shinyWidgets::radioGroupButtons(
+        ns("angle_type"), 
+        label = "Angle", 
+        choices = .types(),
+        selected = .get_attr_type(args$angle),
+        justified = TRUE,
+        width = "100%"
       ),
-      fluidRow(
-        column(6, shinyWidgets::radioGroupButtons(
-          ns("lineheight_type"), "Line Height", choices = c("NA", "NULL", "Value"),
-          selected = .get_attr_type(args$lineheight),
-          justified = TRUE, width = "100%"
-        )),
-        column(6, numericInput(
-          ns("lineheight"), label = br(), value = args$lineheight, step = 0.1, min = 0
-        ))
+      numericInput(
+        ns("angle"), 
+        label = NULL, 
+        value = .set_default(args$angle, 0), 
+        step = 1, 
+        min = 0, 
+        max = 360
       ),
-      fluidRow(
-        column(7, shinyWidgets::radioGroupButtons(
-          ns("margin_type"), "Margin", choices = c("NULL", "Value"),
-          selected = .get_attr_type(args$margin), justified = TRUE, width = "100%"
-        )),
+      hr(),
+      # lineheight ----
+      shinyWidgets::radioGroupButtons(
+        ns("lineheight_type"), 
+        label = "Line Height", 
+        choices = .types(),
+        selected = .get_attr_type(args$lineheight),
+        justified = TRUE,
+        width = "100%"
+      ),
+      numericInput(
+        ns("lineheight"), 
+        label = NULL,
+        value = .set_default(args$lineheight, 1), 
+        step = 0.1, 
+        min = 0
+      ),
+      hr(),
+      # margin ----
+      shinyWidgets::radioGroupButtons(
+        ns("margin_type"), 
+        label = "Margin", 
+        choices = .types(),
+        selected = .get_attr_type(args), 
+        justified = TRUE,
+        width = "100%"
       ),
       fluidRow(
         column(4, numericInput(
-          ns("value_top"), label = "top", value = as.numeric(value[1])
+          ns("value_top"), 
+          label = "top", 
+          value = .set_default(value[1], 0)
         )),
         column(5, selectInput(
-          ns("unit_top"), label = br(), choices = UNITS, selected = unit[1], width = "100%"
+          ns("unit_top"), 
+          label = br(), 
+          choices = UNITS, 
+          selected = .set_default(unit[1], "points"),
         ))
       ),
       fluidRow(
         column(4, numericInput(
-          ns("value_bottom"), label = "bottom", value = as.numeric(value[3])
+          ns("value_bottom"), 
+          label = "bottom", 
+          value = .set_default(value[3], 0)
         )),
         column(5, selectInput(
-          ns("unit_bottom"), label = br(), choices = UNITS, selected = unit[3]
+          ns("unit_bottom"), 
+          label = br(), 
+          choices = UNITS, 
+          selected = .set_default(unit[3], "points"),
         ))
       ),
       fluidRow(
         column(4, numericInput(
-          ns("value_left"), label = "left", value = as.numeric(value[4])
+          ns("value_left"), 
+          label = "left", 
+          value = .set_default(value[4], 0)
         )),
         column(5, selectInput(
-          ns("unit_left"), label = br(), choices = UNITS, selected = unit[4]
+          ns("unit_left"), 
+          label = br(), 
+          choices = UNITS, 
+          selected = .set_default(unit[4], "points"),
         ))
       ),
       fluidRow(
         column(4, numericInput(
-          ns("value_right"), label = "right", value = as.numeric(value[2])
+          ns("value_right"), 
+          label = "right", 
+          value = .set_default(value[2], 0)
         )),
         column(5, selectInput(
-          ns("unit_right"), label = br(), choices = UNITS, selected = unit[2]
+          ns("unit_right"), 
+          label = br(),
+          choices = UNITS,
+          selected = .set_default(unit[2], "points"),
         ))
-      ),
-      shinyWidgets::prettyCheckbox(
-        ns("inherit.blank"), label = strong("inherit blank from parents"),
-        value = args$inherit.blank,
-        status = "primary", shape = "round"
-      ),
-      width = 4
+      )
     ),
     mainPanel = mainPanel(
-      plotOutput(ns("plot"), height = "600px") %>% shinycssloaders::withSpinner(),
-      verbatimTextOutput(ns("theme"), placeholder = TRUE)
+      plotOutput(ns("plot"), height = HEIGHT) %>% 
+        shinycssloaders::withSpinner()
     )
   )
 }
 
-element_text_server <- function(id) {
+element_text_server <- function(id, graph) {
   moduleServer(
     id, 
     function(input, output, session) {
       
-      attrs <- c("family", "face", "colour", "size", "hjust", "vjust", "angle", "lineheight")
-      attrs_type <- paste0(attrs, "_type")
-      append_attrs <- c("margin_type", "value_top", "unit_top", 
-                        "value_bottom", "unit_bottom", "value_left",
-                        "unit_left", "value_right", "unit_right")
+      attrs <- list(
+        "family_type" = "family",
+        "face_type" = "face",
+        "colour_type" = "colour",
+        "size_type" = c("size_unit", "size_value"),
+        "hjust_type" = "hjust",
+        "vjust_type" = "vjust",
+        "angle_type" = "angle",
+        "lineheight_type" = "lineheight", 
+        "margin_type" = c("value_top", "unit_top", "value_bottom", "unit_bottom",
+                          "value_left", "unit_left", "value_right", "unit_right")
+      )
       
-      # enable and disable all the attrs and attrs_type
       observeEvent(input$set_to_blank, {
         if (input$set_to_blank) {
-          for (each in c(attrs, attrs_type, append_attrs))  {
+          for (each in c(names(attrs), unlist(attrs)))  {
             shinyjs::disable(each)
           }
-          shinyjs::disable("inherit.blank")
         } else {
-          for (each in attrs_type)  {
-            shinyjs::enable(each)
-            if (input[[each]] == "Value") {
-              shinyjs::enable(attrs[which(attrs_type == each)])
+          for (controler in names(attrs)) {
+            shinyjs::enable(controler)
+            if (input[[controler]] == .types(3)) {
+              for (element in attrs[[controler]]) {
+                shinyjs::enable(element)
+              }
             }
           }
-          shinyjs::enable(append_attrs[1])
-          if (input[[append_attrs[1]]] == "Value") {
-            for (each in append_attrs[-1]) {
-              shinyjs::enable(each)
-            }
-          }
-          shinyjs::enable("inherit.blank")
         }
       })
       
-      # enable and disable all the attrs according to attrs_type
-      lapply(1:length(attrs), function(idx) {
-        observeEvent(input[[attrs_type[idx]]], {
-          if (input[[attrs_type[idx]]] %in% c("NULL", "NA")) {
-            shinyjs::disable(attrs[idx])
-          } else {
-            shinyjs::enable(attrs[idx])
-          }
-        })
-      })
-      observeEvent(input[[append_attrs[1]]], {
-        if (input[[append_attrs[1]]] %in% c("NULL", "NA")) {
-          for (each in append_attrs[-1]) {
-            shinyjs::disable(each)
-          }
-        } else {
-          for (each in append_attrs[-1]) {
-            shinyjs::enable(each)
-          }
-        }
-      })
+      mapply(.toggle_controler, names(attrs), attrs, list(input = input))
       
       new_theme[[id]] <- reactive({
         if (input$set_to_blank) {
           return(element_blank())
         }
         
-        for (idx in 1:length(attrs)) {
-          if (input[[attrs_type[idx]]] == "NULL") {
-            assign(attrs[idx], NULL)
-          } else if (input[[attrs_type[idx]]] == "NA") {
-            assign(attrs[idx], NA)
-          } else {
-            assign(attrs[idx], input[[attrs[idx]]])
-          }
-        }
-      
+        .assign(names(attrs), input)
         
-        result <- element_text(
+        element_text(
           family = family,
           face = face,
           colour = colour,
@@ -237,31 +285,13 @@ element_text_server <- function(id) {
           vjust = vjust,
           angle = angle,
           lineheight = lineheight,
-          inherit.blank = input$inherit.blank
+          margin = margin
         )
-        
-        if (input$margin_type == "NULL") {
-          result["margin_type"] <- list(NULL)
-        } else if (input$margin_type == "NA") {
-          result["margin_type"] <- list(FALSE)
-        } else {
-          result["margin_type"] <- list(margin(
-            t = input$value_top, r = input$value_right,
-            b = input$value_bottom, l = input$value_left,
-            unit = c(input$unit_top, input$unit_right, input$unit_bottom, input$unit_left)
-          ))
-        }
-        
-        result
-      })
-      
-      output$theme <- renderPrint({
-        .reactiveValues_to_theme(new_theme)
       })
       
       output$plot <- renderCachedPlot({
-        plot + .reactiveValues_to_theme(new_theme)
-      }, cacheKeyExpr = .reactiveValues_to_theme(new_theme))
+        .get_plot(graph)
+      }, cacheKeyExpr = .cache_key(graph))
     }
   )
 } 

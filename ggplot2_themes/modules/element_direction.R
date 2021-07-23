@@ -1,3 +1,4 @@
+DIRECTION <- c("horizontal", "vertical")
 
 element_direction_ui <- function(id) {
   ns <- NS(id)
@@ -6,51 +7,48 @@ element_direction_ui <- function(id) {
   
   sidebarLayout(
     sidebarPanel = sidebarPanel(
-      fluidRow(
-        column(6, shinyWidgets::radioGroupButtons(
-          ns("direction_type"), "Direction", choices = c("NULL", "Value"),
-          selected = .get_attr_type(args),
-          justified = TRUE, width = "100%"
-        )),
-        column(6, selectInput(
-          ns("direction"), label = br(), choices = DIRECTION,
-          selected = args, width = "100%"
-        ))
+      shinyWidgets::radioGroupButtons(
+        ns("direction_type"), 
+        label = "Direction", 
+        choices = .types(-1),
+        selected = .get_attr_type(args),
+        justified = TRUE,
+        width = "100%"
+      ),
+      selectInput(
+        ns("direction"), 
+        label = NULL, 
+        choices = DIRECTION,
+        selected = .set_default(args, DIRECTION[1]), 
+        width = "100%"
       )
     ),
     mainPanel = mainPanel(
-      plotOutput(ns("plot"), height = "600px") %>% shinycssloaders::withSpinner(),
-      verbatimTextOutput(ns("theme"), placeholder = TRUE)
+      plotOutput(ns("plot"), height = HEIGHT) %>% 
+        shinycssloaders::withSpinner()
     )
   )
 }
 
-element_direction_server <- function(id) {
+element_direction_server <- function(id, graph) {
   moduleServer(
     id,
     function(input, output, session) {
-      observeEvent(input$direction_type, {
-        if (input$direction_type == "NULL") {
-          shinyjs::disable("direction")
-        } else {
-          shinyjs::enable("direction")
-        }
-      })
+      
+      attrs <- list(
+        "direction_type" = "direction"
+      )
+      
+      mapply(.toggle_controler, names(attrs), attrs, list(input = input))
       
       new_theme[[id]] <- reactive({
-        if (input$direction_type == "NULL") {
-          return(NULL)
-        }
-        element_direction(direction = input$direction)
-      })
-      
-      output$theme <- renderPrint({
-        .reactiveValues_to_theme(new_theme)
+        .assign(names(attrs), input)
+        element_direction(direction = direction)
       })
       
       output$plot <- renderCachedPlot({
-        plot + .reactiveValues_to_theme(new_theme)
-      }, cacheKeyExpr = .reactiveValues_to_theme(new_theme))
+        .get_plot(graph)
+      }, cacheKeyExpr = .cache_key(graph))
     }
   )
 }

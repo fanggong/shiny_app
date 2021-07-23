@@ -3,101 +3,99 @@ element_margin_ui <- function(id) {
   
   args <- theme_init[[id]]
   
-  if (!is.null(args)) {
-    args <- as.character(args)
-    value <- stringr::str_match(args, "[0-9.]+")
-    unit <- stringr::str_match(args, "[^0-9.]+")
-  } else {
-    value <- rep(0, 4)
-    unit <- rep("points", 4)
-  }
+  value <- stringr::str_match(as.character(args), "[0-9.]+")
+  unit <- stringr::str_match(as.character(args), "[^0-9.]+")
   
   sidebarLayout(
     sidebarPanel = sidebarPanel(
-      fluidRow(
-        column(7, shinyWidgets::radioGroupButtons(
-          ns("margin_type"), "Margin", choices = c("NULL", "Value"),
-          selected = .get_attr_type(args), justified = TRUE, width = "100%"
-        )),
+      shinyWidgets::radioGroupButtons(
+        ns("margin_type"), 
+        label = "Margin", 
+        choices = .types(),
+        selected = .get_attr_type(args), 
+        justified = TRUE,
+        width = "100%"
       ),
       fluidRow(
         column(4, numericInput(
-          ns("value_top"), label = "top", value = as.numeric(value[1])
+          ns("value_top"), 
+          label = "top", 
+          value = .set_default(value[1], 0)
         )),
         column(5, selectInput(
-          ns("unit_top"), label = br(), choices = UNITS, selected = unit[1], width = "100%"
+          ns("unit_top"), 
+          label = br(), 
+          choices = UNITS, 
+          selected = .set_default(unit[1], "points"),
         ))
       ),
       fluidRow(
         column(4, numericInput(
-          ns("value_bottom"), label = "bottom", value = as.numeric(value[3])
+          ns("value_bottom"), 
+          label = "bottom", 
+          value = .set_default(value[3], 0)
         )),
         column(5, selectInput(
-          ns("unit_bottom"), label = br(), choices = UNITS, selected = unit[3]
+          ns("unit_bottom"), 
+          label = br(), 
+          choices = UNITS, 
+          selected = .set_default(unit[3], "points"),
         ))
       ),
       fluidRow(
         column(4, numericInput(
-          ns("value_left"), label = "left", value = as.numeric(value[4])
+          ns("value_left"), 
+          label = "left", 
+          value = .set_default(value[4], 0)
         )),
         column(5, selectInput(
-          ns("unit_left"), label = br(), choices = UNITS, selected = unit[4]
+          ns("unit_left"), 
+          label = br(), 
+          choices = UNITS, 
+          selected = .set_default(unit[4], "points"),
         ))
       ),
       fluidRow(
         column(4, numericInput(
-          ns("value_right"), label = "right", value = as.numeric(value[2])
+          ns("value_right"), 
+          label = "right", 
+          value = .set_default(value[2], 0)
         )),
         column(5, selectInput(
-          ns("unit_right"), label = br(), choices = UNITS, selected = unit[2]
+          ns("unit_right"), 
+          label = br(),
+          choices = UNITS,
+          selected = .set_default(unit[2], "points"),
         ))
       )
     ),
     mainPanel = mainPanel(
-      plotOutput(ns("plot"), height = "600px") %>% shinycssloaders::withSpinner(),
-      verbatimTextOutput(ns("theme"), placeholder = TRUE)
+      plotOutput(ns("plot"), height = HEIGHT) %>% 
+        shinycssloaders::withSpinner()
     )
   )
 }
 
-element_margin_server <- function(id) {
+element_margin_server <- function(id, graph) {
   moduleServer(
     id, 
     function(input, output, session) {
       
-      directions <- c("top", "bottom", "left", "right")
-      observeEvent(input$margin_type, {
-        if (input$margin_type == "NULL") {
-          for (d in directions) {
-            shinyjs::disable(paste0("value_", d))
-            shinyjs::disable(paste0("unit_", d))
-          }
-        } else {
-          for (d in directions) {
-            shinyjs::enable(paste0("value_", d))
-            shinyjs::enable(paste0("unit_", d))
-          }
-        }
-      })
+      attrs <- list(
+        "margin_type" = c("value_top", "unit_top", "value_bottom", "unit_bottom",
+                          "value_left", "unit_left", "value_right", "unit_right")
+      )
+      
+      mapply(.toggle_controler, names(attrs), attrs, list(input = input))
       
       new_theme[[id]] <- reactive({
-        if (input$margin_type == "NULL") {
-          return(NULL)
-        }
-        element_margin(
-          t = input$value_top, r = input$value_right,
-          b = input$value_bottom, l = input$value_left,
-          unit = c(input$unit_top, input$unit_right, input$unit_bottom, input$unit_left)
-        )
-      })
-      
-      output$theme <- renderPrint({
-        .reactiveValues_to_theme(new_theme)
+        .assign(names(attrs), input)
+        element_margin(margin = margin)
       })
       
       output$plot <- renderCachedPlot({
-        plot + .reactiveValues_to_theme(new_theme)
-      }, cacheKeyExpr = .reactiveValues_to_theme(new_theme))
+        .get_plot(graph)
+      }, cacheKeyExpr = .cache_key(graph))
       
     }
   )

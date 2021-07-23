@@ -1,11 +1,18 @@
-
+# element函数 ----
 element_blank <- function() {
   ggplot2::element_blank()
 }
 
 element_line <- function(..., inherit.blank = TRUE) {
   element <- ggplot2::element_line(..., inherit.blank = inherit.blank)
-  element["arrow"] <- list(NULL)
+  arrow <- element$arrow
+  if (inherits(arrow, "arrow")) {
+    return(element)
+  } else if (is.na(arrow)) {
+    element["arrow"] <- list(FALSE)
+  } else if (inherits(arrow, "logical") & !arrow) {
+    element["arrow"] <- list(NULL)
+  }  
   element
 }
 
@@ -17,18 +24,16 @@ element_text <- function(..., inherit.blank = TRUE) {
   ggplot2::element_text(..., inherit.blank = inherit.blank)
 }
 
-element_margin <- function(t = NULL, r = NULL, b = NULL, l = NULL, unit = "points") {
-  if (length(c(t, r, b, l)) != 4) return(NULL)
-  else return(margin(t = t, r = r, b = b, l = l, unit = unit))
+element_margin <- function(margin = NULL) {
+  return(margin)
 }
 
-element_unit <- function(x = NULL, units = "points") {
-  if (is.null(x)) return(NULL)
-  else return(unit(x = x, units = units))
+element_unit <- function(unit = NULL) {
+  return(unit)
 }
 
-element_align <- function(number = NULL) {
-  return(number)
+element_align <- function(align = NULL) {
+  return(align)
 }
 
 element_title_position <- function(title_position = NULL) {

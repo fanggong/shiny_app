@@ -1,3 +1,5 @@
+JUST <- c("top", "bottom", "left", "right")
+
 element_just_ui <- function(id) {
   ns <- NS(id)
   
@@ -5,51 +7,49 @@ element_just_ui <- function(id) {
   
   sidebarLayout(
     sidebarPanel = sidebarPanel(
-      fluidRow(
-        column(6, shinyWidgets::radioGroupButtons(
-          ns("just_type"), "Justification", choices = c("NULL", "Value"),
-          selected = .get_attr_type(args),
-          justified = TRUE, width = "100%"
-        )),
-        column(6, selectInput(
-          ns("just"), label = br(), choices = JUST,
-          selected = args, width = "100%"
-        ))
+      shinyWidgets::radioGroupButtons(
+        ns("just_type"), 
+        label = "Justification", 
+        choices = .types(),
+        selected = .get_attr_type(args),
+        justified = TRUE, 
+        width = "100%"
+      ),
+      selectInput(
+        ns("just"), 
+        label = NULL, 
+        choices = JUST,
+        selected = .set_default(args, JUST[1]), 
+        width = "100%"
       )
     ),
     mainPanel = mainPanel(
-      plotOutput(ns("plot"), height = "600px") %>% shinycssloaders::withSpinner(),
-      verbatimTextOutput(ns("theme"), placeholder = TRUE)
+      plotOutput(ns("plot"), height = HEIGHT) %>% 
+        shinycssloaders::withSpinner()
     )
   )
 }
 
-element_just_server <- function(id) {
+element_just_server <- function(id, graph) {
   moduleServer(
     id,
     function(input, output, session) {
-      observeEvent(input$just_type, {
-        if (input$just_type == "NULL") {
-          shinyjs::disable("just")
-        } else {
-          shinyjs::enable("just")
-        }
-      })
+      
+      attrs <- list(
+        "just_type" = "just"
+      )
+      
+      mapply(.toggle_controler, names(attrs), attrs, list(input = input))
       
       new_theme[[id]] <- reactive({
-        if (input$just_type == "NULL") {
-          return(NULL)
-        }
-        element_just(just = input$just)
+        .assign(names(attrs), input)
+        element_just(just = just)
       })
       
-      output$theme <- renderPrint({
-        .reactiveValues_to_theme(new_theme)
-      })
       
       output$plot <- renderCachedPlot({
-        plot + .reactiveValues_to_theme(new_theme)
-      }, cacheKeyExpr = .reactiveValues_to_theme(new_theme))
+        .get_plot(graph)
+      }, cacheKeyExpr = .cache_key(graph))
     }
   )
 }
