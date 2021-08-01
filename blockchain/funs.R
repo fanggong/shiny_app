@@ -230,4 +230,4 @@ cat("soba has", get_balance(soba, block_chain), "coin!\n")
 
 # Nodes ------------
 
-# 有点弄不下去了，R多线程咋弄要研究一下
+
