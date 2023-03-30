@@ -3,8 +3,7 @@
 
 | directory | description | url |
 |-|-|-|
-|blockchain|一个区块链demo|https://shiny.fanggong.pub/blockchain/|
-|data_describer|各种Shiny相关包的实践|https://shiny.fanggong.pub/data_describer/|
-|iframe_test|用于测试blog中的iframe样式|https://fanggong.pub/posts/always_today/|
-|update_reactive_object|如何修改reactive对象的demo|https://fanggong.pub/posts/20210606_shiny_update_reactive_object/|
+|data_describer|各种Shiny相关包的实践|http://kendo.sc.cn/shiny/data_describer/|
+|iframe_test|用于测试blog中的iframe样式|http://kendo.sc.cn/shiny/iframe_test/|
+|update_reactive_object|如何修改reactive对象的demo|http://kendo.sc.cn/shiny/update_reactive_object|
 
