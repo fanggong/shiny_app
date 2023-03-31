@@ -21,6 +21,13 @@ jobs:
           FOLDER: ./
           SERVER_IP: ${{ secrets.SSH_HOST }}
           USERNAME: ${{ secrets.SSH_USERNAME }}
-          SERVER_DESTINATION: /srv/shiny_app/
+          SERVER_DESTINATION: /srv/shiny-server/
           
-
+      - name: Docker Shinyserver
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.DEPLOY_KEY }}
+          script: |
+            systemctl restart shiny-server.service
