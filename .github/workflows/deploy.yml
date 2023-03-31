@@ -30,4 +30,6 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.DEPLOY_KEY }}
           script: |
+            cd /srv/shiny-server
+            Rscript restore_packages.R
             systemctl restart shiny-server.service
