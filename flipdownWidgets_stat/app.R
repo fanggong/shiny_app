@@ -22,10 +22,9 @@ ui <- fluidPage(
   fluidRow(
     column(
       width = 6,
-      offset = 6,
       radioGroupButtons(
         "period", choices = c("Day" = "day", "Week" = "week", "Month" = "month"),
-        direction = "horizontal", justified = FALSE, size = "normal"
+        direction = "horizontal", justified = TRUE, size = "normal"
       )
     ),
     column(
@@ -54,7 +53,7 @@ server <- function(input, output, session) {
         xaxis = list(title = "Date", rangeslider = list(visible = TRUE)),
         yaxis = list(title = "Download Times"),
         showlegend = FALSE,
-        template = 1121
+        margin = list(l = 10, t = 0, r = 10, b = 0)
       )
   })
 }
