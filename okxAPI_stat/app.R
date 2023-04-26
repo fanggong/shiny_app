@@ -5,7 +5,7 @@ library(data.table)
 library(lubridate)
 library(plotly)
 
-src <- cran_downloads("flipdownWidgets", from = "2020-01-01")
+src <- cran_downloads("okxAPI", from = "2020-01-01")
 setDT(src)
 src <- src[count != 0]
 src[
