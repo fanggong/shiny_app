@@ -28,6 +28,10 @@ h6 {
   font-family: 'Fira Mono';
 }
 
+.dataTables_scrollBody {
+  height: unset !important;
+}
+
 .skin-blue .main-header .logo {
   font-family: 'Fira Mono';
   font-weight: 700;

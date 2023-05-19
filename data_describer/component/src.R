@@ -1,3 +1,47 @@
+observeEvent(input$config_var_type, {
+  showModal(
+    modalDialog(
+      title = "Edit Variable Types",
+      renderUI({
+        lapply(names(files$dat), function(colname) {
+          radioGroupButtons(
+            paste0(colname, "_type"), colname, choices = VAR_TYPE, 
+            selected = .convert_var_type(files$info[colname]),
+            direction = "horizontal", justified = TRUE, size = "sm"
+          )
+        })
+      }),
+      footer = tagList(
+        actionButton("apply_types", "Apply"),
+        modalButton("Cancel")
+      ),
+      fade = TRUE, size = "l"
+    )
+  )
+})
+
+observeEvent(input$apply_types, {
+  files$info <- sapply(names(files$dat), function(colname) {
+    input[[paste0(colname, "_type")]]
+  })
+  files$dat <- .format_data(files$dat, files$info)
+  files$info <- .convert_var_type(files$info)
+  
+  output$data <- renderUI({
+    div(datatable(
+      files$dat, 
+      extensions = 'Buttons', 
+      options = list(
+        scrollX = TRUE,
+        dom = 'Bfrtip', buttons = I('colvis')
+      )
+    ))
+  })
+})
+
+
+
+
 observeEvent(input$read, {
   if (input$use_test_data) {
     iris$ordinal <- sample(letters[1:5], nrow(iris), replace = TRUE)

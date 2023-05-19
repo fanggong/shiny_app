@@ -1,9 +1,11 @@
-MISSING_VALUE <- "#BBA1CB"
 
-BOX_Fill_COLOR <- "#88ABDA"
-LINE_COLOR <- "#5976BA"
+LINE_COLOR <- "#005CAF"
+POINT_COLOR <- "#0F2540"
+BAR_COLOR <- "#005CAF"
+OPACITY <- 0.7
 
-BAR_COLOR <- "#5976BA"
+FONT_FAMILY <- "Fira Mono"
+
 
 MY_DASHBOARD <- create_theme(
   adminlte_color(

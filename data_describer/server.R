@@ -1,16 +1,24 @@
 server <- function(input, output, session) {
   
   files <- reactiveValues(dat = NULL, info = NULL)
-  output$numerical_description <- renderUI({
-    validate(need(NULL, "No Data Provided"))
-  })
-  output$cate_ordi_description <- renderUI({
-    validate(need(NULL, "No Data Provided"))
-  })
-  output$other_description <- renderUI({
-    validate(need(NULL, "No Data Provided"))
+  
+  output$data <- renderUI({
+    validate(need(NULL, "No Data Avaliable"))
   })
   
-  source("./component/data_upload_server.R", local = TRUE, encoding = "UTF-8")
+  output$des_plot <- renderUI({
+    validate(need(NULL, "No Data Avaliable"))
+  })
+  
+  output$cor_plot <- renderUI({
+    validate(need(NULL, "No Data Avaliable"))
+  })
+  
+  source("./component/configuration.R", local = TRUE, encoding = "UTF-8")
+  
+  source("./component/descriptive_analysis.R", local = TRUE, encoding = "UTF-8")
+  
+  source("./component/correlation_analysis.R", local = TRUE, encoding = "UTF-8")
+
 }
 
