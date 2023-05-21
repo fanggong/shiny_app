@@ -5,9 +5,9 @@ observe({
 
 observeEvent(input$var_x, {
   if (input$var_x == "None") {
-    updateRadioGroupButtons(session, "var_x_type", disabled = TRUE)
+    shinyWidgets::updateRadioGroupButtons(session, "var_x_type", disabled = TRUE)
   } else {
-    updateRadioGroupButtons(
+    shinyWidgets::updateRadioGroupButtons(
       session, "var_x_type", disabled = FALSE,
       selected = files$info[input$var_x]
     )
@@ -17,23 +17,11 @@ observeEvent(input$var_x_type, {
   files$info[input$var_x] <- input$var_x_type
 })
 
-# observeEvent({input$var_x; input$var_x_type}, {
-#   labels <- as.list(levels(files$dat[[input$var_x]]))
-#   output$var_x_levels <- renderUI({
-#     div(rank_list(
-#       text = "Drag the items in any desired order",
-#       labels = labels,
-#       input_id = "var_x_levels",
-#       orientation = "horizontal"
-#     ))
-#   })
-# })
-
 observeEvent(input$var_y, {
   if (input$var_y == "None") {
-    updateRadioGroupButtons(session, "var_y_type", disabled = TRUE)
+    shinyWidgets::updateRadioGroupButtons(session, "var_y_type", disabled = TRUE)
   } else {
-    updateRadioGroupButtons(
+    shinyWidgets::updateRadioGroupButtons(
       session, "var_y_type", disabled = FALSE,
       selected = files$info[input$var_y]
     )
@@ -87,7 +75,7 @@ observeEvent(input$des_cal, {
         )
       } 
       else if (var_x_type %in% c("factor", "ordered")) {
-        tmp <- count(data.frame(x = x), x)
+        tmp <- as.data.frame(table(x))
         names(tmp) <- c(var_x, "count")
         plt <- plot_ly(
           x = tmp[[var_x]], y = tmp[["count"]], type = "bar",
@@ -120,7 +108,7 @@ observeEvent(input$des_cal, {
         )
       } 
       else if (var_y_type %in% c("factor", "ordered")) {
-        tmp <- count(data.frame(y = y), y)
+        tmp <- as.data.frame(table(y))
         names(tmp) <- c(var_y, "count")
         plt <- plot_ly(
           y = tmp[[var_y]], x = tmp[["count"]], type = "bar",
@@ -197,7 +185,7 @@ observeEvent(input$des_cal, {
         )
       } 
       else if (var_x_type %in% c("factor", "ordered") && var_y_type %in% c("factor", "ordered")) {
-        tmp <- count(data.frame(x = x, y = y), x, y)
+        tmp <- as.data.frame(table(x, y))
         names(tmp) <- c(var_x, var_y, "count")
         colors_dis <- colorRampPalette(c(BAR_COLOR, "#CCCCCC"))(length(levels(y)))
         names(colors_dis) <- levels(y)

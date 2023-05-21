@@ -10,14 +10,14 @@ ui <- dashboardPage(
       menuItem("Configuration", tabName = "configuration", icon = icon("gears")),
       menuItem("Descriptive Analysis", tabName = "descriptive_analysis", icon = icon("table")),
       menuItem("Correlation Analysis", tabName = "correlation_analysis", icon = icon("braille")),
-      prettyCheckbox("use_test_data", "Use Test Data?", value = TRUE, status = "primary")
+      menuItem("Test of Significance", tabName = "difference_analysis", icon = icon("vials")),
+      shinyWidgets::prettyCheckbox("use_test_data", "Use Test Data?", value = TRUE, status = "primary")
     )
   ),
   # body ------------------
   body = dashboardBody(
     includeCSS("www/my_dashboard.css"),
     tabItems(
-      
       ## configuration ----------
       tabItem(
         tabName = "configuration",
@@ -50,30 +50,27 @@ ui <- dashboardPage(
               "var_x", label = "X axis", choices = NULL, multiple = FALSE,
               width = "100%"
             ),
-            radioGroupButtons(
+            shinyWidgets::radioGroupButtons(
               "var_x_type", label = NULL, choices = VAR_TYPE, disabled = TRUE,
               direction = "horizontal", justified = TRUE, size = "sm"
             ),
-            # htmlOutput("var_x_levels"),
             
             selectizeInput(
               "var_y", label = "Y axis", choices = NULL, multiple = FALSE,
               width = "100%"
             ),
-            radioGroupButtons(
+            shinyWidgets::radioGroupButtons(
               "var_y_type", label = NULL, choices = VAR_TYPE, disabled = TRUE,
               direction = "horizontal", justified = TRUE, size = "sm"
             ),
 
-            fluidRow(
-              column(12, actionButton("des_cal", "Plot & Analysis", width = "100%")),
-              tags$style("#des_cal {height: 60px}")
-            )
+            actionButton("des_cal", "Plot & Analysis", width = "100%"),
+            tags$style("#des_cal {height: 60px}")
           ),
           column(
             width = 8, 
             box(
-              width = NULL, status = "info", solidHeader = FALSE, title = "Distribution Diagram",
+              width = NULL, status = "info", solidHeader = FALSE, title = "Plot",
               id = "des_plot_box", plotlyOutput("des_plot", height = "630px")
             )
           )
@@ -89,7 +86,7 @@ ui <- dashboardPage(
               "cor_var_x", label = "Variable X", choices = NULL, multiple = FALSE,
               width = "100%"
             ),
-            radioGroupButtons(
+            shinyWidgets::radioGroupButtons(
               "cor_var_x_type", label = NULL, choices = VAR_TYPE, disabled = TRUE,
               direction = "horizontal", justified = TRUE, size = "sm"
             ),
@@ -98,31 +95,78 @@ ui <- dashboardPage(
               "cor_var_y", label = "Variable Y", choices = NULL, multiple = FALSE,
               width = "100%"
             ),
-            radioGroupButtons(
+            shinyWidgets::radioGroupButtons(
               "cor_var_y_type", label = NULL, choices = VAR_TYPE, disabled = TRUE,
               direction = "horizontal", justified = TRUE, size = "sm"
             ),
             
-            awesomeRadio(
+            shinyWidgets::awesomeRadio(
               "cor_method", label = "Methods", choices = COR_METHOD,
               status = "default", checkbox = FALSE, width = "100%"
             ),
             
-            fluidRow(
-              column(12, actionButton("cor_cal", "Calculate", width = "100%")),
-              tags$style("#cor_cal {height: 60px}")
+            actionButton("cor_cal", "Calculate", width = "100%"),
+            tags$style("#cor_cal {height: 60px}"),
+            
+            box(
+              width = NULL, status = "info", solidHeader = FALSE, title = "Result",
+              id = "cor_res_box", verbatimTextOutput("cor_res", placeholder = TRUE)
             ),
-
-            fluidRow(
-              column(12, verbatimTextOutput("cor_ana", placeholder = TRUE)),
-              tags$style("#cor_ana {margin-top: 10px; height: 235px; background-color: #FFF}")
-            )
+            
+            tags$style("#cor_res_box {margin-top: 10px; height: 235px"),
+            tags$style("#cor_res {height: 170px; background-color: #FFF; border: 0px; pading: 0; font-family: 'Fira Mono'}")
           ),
           column(
             width = 8, 
             box(
-              width = NULL, status = "info", solidHeader = FALSE, title = "Correlation Analysis",
+              width = NULL, status = "info", solidHeader = FALSE, title = "Plot",
               id = "cor_plot_box", plotlyOutput("cor_plot", height = "630px")
+            )
+          )
+        )
+      ),
+      ## difference analysis -------
+      tabItem(
+        tabName = "difference_analysis",
+        fluidRow(
+          column(
+            width = 4,
+            selectizeInput(
+              "diff_var_x", label = "Grouping Variable", choices = NULL, multiple = FALSE,
+              width = "100%"
+            ),
+            shinyWidgets::radioGroupButtons(
+              "diff_var_x_type", label = NULL, choices = GROUPINT_VAR_TYPE, disabled = TRUE,
+              direction = "horizontal", justified = TRUE, size = "sm"
+            ),
+            
+            selectizeInput(
+              "diff_var_y", label = "Analyzing Variable", choices = NULL, multiple = FALSE,
+              width = "100%"
+            ),
+            shinyWidgets::radioGroupButtons(
+              "diff_var_y_type", label = NULL, choices = ANALYZING_VAR_TYPE, disabled = TRUE,
+              direction = "horizontal", justified = TRUE, size = "sm"
+            ),
+            
+            actionButton("diff_cal", "Calculate", width = "100%"),
+            tags$style("#diff_cal {height: 60px}")
+          ),
+          column(
+            width = 8, 
+            box(
+              width = NULL, status = "info", solidHeader = FALSE, title = "Result",
+              id = "diff_res_box", gt_output("diff_res")
+            ),
+            tags$style("#diff_res_box {height: 310px}")
+          )
+        ),
+        fluidRow(
+          column(
+            width = 12,
+            box(
+              width = NULL, status = "info", solidHeader = FALSE, title = "Plot",
+              id = "diff_plot_box", plotlyOutput("diff_plot", height = "300px")
             )
           )
         )

@@ -3,7 +3,6 @@ observeEvent(input$read, {
     dat <- reactive(iris)
   } else {
     req(input$src_file)
-    
     dat_file <- isolate(input$src_file)
     ext <- tools::file_ext(dat_file$datapath)
     if (ext == "csv") {
@@ -15,7 +14,7 @@ observeEvent(input$read, {
   info <- reactive(sapply(dat(), class))
   
   output$data <- renderUI({
-    div(datatable(
+    div(DT::datatable(
       dat(), 
       extensions = 'Buttons', 
       options = list(
@@ -24,8 +23,6 @@ observeEvent(input$read, {
       )
     ))
   })
-  
-  
   
   files$dat <- dat()
   files$info <- info()

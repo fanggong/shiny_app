@@ -7,7 +7,7 @@ OPACITY <- 0.7
 FONT_FAMILY <- "Fira Mono"
 
 
-MY_DASHBOARD <- create_theme(
+MY_DASHBOARD <- fresh::create_theme(
   adminlte_color(
     light_blue = "#434C5E",
     aqua = "#81A1C1"

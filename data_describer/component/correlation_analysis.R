@@ -5,7 +5,7 @@ observe({
 
 
 observeEvent(input$cor_var_x, {
-  updateRadioGroupButtons(
+  shinyWidgets::updateRadioGroupButtons(
     session, "cor_var_x_type", disabled = FALSE,
     selected = files$info[input$cor_var_x]
   )
@@ -16,7 +16,7 @@ observeEvent(input$cor_var_x_type, {
 
 
 observeEvent(input$cor_var_y, {
-  updateRadioGroupButtons(
+  shinyWidgets::updateRadioGroupButtons(
     session, "cor_var_y_type", disabled = FALSE,
     selected = files$info[input$cor_var_y]
   )
@@ -29,7 +29,7 @@ observeEvent(input$cor_var_y_type, {
 observeEvent(input$cor_cal, {
   req(files$dat)
   output$cor_plot <- renderPlotly({
-    output$cor_ana <- renderPrint({
+    output$cor_res <- renderPrint({
       cat("")
     })
     method <- isolate(input$cor_method)
@@ -67,7 +67,7 @@ observeEvent(input$cor_cal, {
         yaxis = list(title = var_y, zeroline = FALSE),
         font = list(family = FONT_FAMILY)
       )
-      output$cor_ana <- renderPrint({
+      output$cor_res <- renderPrint({
         tmp <- data.frame(x = x, y = y)
         names(tmp) <- c(var_x, var_y)
         code <- sprintf("cor.test(~%s+%s,data=tmp,method='pearson')", var_x, var_y)
@@ -93,7 +93,7 @@ observeEvent(input$cor_cal, {
           yaxis = list(title = var_y, zeroline = FALSE),
           font = list(family = FONT_FAMILY)
         )
-      output$cor_ana <- renderPrint({
+      output$cor_res <- renderPrint({
         tmp <- data.frame(x = x, y = y)
         names(tmp) <- c(var_x, var_y)
         code <- sprintf("cor.test(~%s+%s,data=tmp,method='kendall',exact=FALSE)", var_x, var_y)
@@ -106,7 +106,7 @@ observeEvent(input$cor_cal, {
         "Variable X and Y must both be ordered variables"
       ))
       
-      tmp <- count(data.frame(x = x, y = y), x, y)
+      tmp <- as.data.frame(table(x, y))
       names(tmp) <- c(var_x, var_y, "count")
       colors_dis <- colorRampPalette(c(BAR_COLOR, "#CCCCCC"))(length(levels(y)))
       names(colors_dis) <- levels(y)
@@ -125,7 +125,7 @@ observeEvent(input$cor_cal, {
         font = list(family = FONT_FAMILY)
       )
       
-      output$cor_ana <- renderPrint({
+      output$cor_res <- renderPrint({
         tmp <- data.frame(x = as.integer(x), y = as.integer(y))
         names(tmp) <- c(var_x, var_y)
         code <- sprintf("cor.test(~%s+%s,data=tmp,method='spearman',exact=FALSE)", var_x, var_y)
@@ -138,7 +138,7 @@ observeEvent(input$cor_cal, {
         "Variable X and Y must both be factor/ordered variables"
       ))
       
-      tmp <- count(data.frame(x = x, y = y), x, y)
+      tmp <- as.data.frame(table(x, y))
       names(tmp) <- c(var_x, var_y, "count")
       colors_dis <- colorRampPalette(c(BAR_COLOR, "#CCCCCC"))(length(levels(y)))
       names(colors_dis) <- levels(y)
@@ -157,7 +157,7 @@ observeEvent(input$cor_cal, {
         font = list(family = FONT_FAMILY)
       )
       
-      output$cor_ana <- renderPrint({
+      output$cor_res <- renderPrint({
         cat("\n")
         cat(strwrap("Mutual information", prefix = "\t"), sep = "\n")
         cat("\n")
