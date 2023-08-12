@@ -1,6 +1,6 @@
 observeEvent(input$read, {
   if (input$use_test_data) {
-    dat <- reactive(iris)
+    dat <- reactive(sample_dat)
   } else {
     req(input$src_file)
     dat_file <- isolate(input$src_file)
@@ -13,16 +13,14 @@ observeEvent(input$read, {
   }
   info <- reactive(sapply(dat(), class))
   
-  output$data <- renderUI({
-    div(DT::datatable(
-      dat(), 
-      extensions = 'Buttons', 
-      options = list(
-        scrollX = TRUE,
-        dom = 'Bfrtip', buttons = I('colvis')
-      )
-    ))
-  })
+  output$data <- renderDT(
+    { dat() },
+    extensions = 'Buttons', 
+    options = list(
+      scrollX = TRUE,
+      dom = 'Bfrtip', buttons = I('colvis')
+    )
+  )
   
   files$dat <- dat()
   files$info <- info()

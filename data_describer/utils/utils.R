@@ -10,3 +10,8 @@
   }
   dat
 }
+
+
+.format_statistic<- function(num, digits = 4) {
+  format(round(num, digits), nsmall = digits)
+}
