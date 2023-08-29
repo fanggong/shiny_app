@@ -5,28 +5,10 @@ library(data.table)
 library(lubridate)
 library(plotly)
 
-src <- cran_downloads("okxAPI", from = "2020-01-01")
-setDT(src)
-src <- src[count != 0]
-src[
-  , `:=`(
-    week = floor_date(as.Date(date), unit = "week", week_start = 1),
-    month = floor_date(as.Date(date), unit = "month")
-  )
-]
-day <- src[, .(count = sum(count)), .(period = date)]
-week <- src[, .(count = sum(count)), .(period = week)]
-month <- src[, .(count = sum(count)), .(period = month)]
+src <- cran_downloads("okxAPI", from = as.character(Sys.Date() - 60))
 
 ui <- fluidPage(
   fluidRow(
-    column(
-      width = 6,
-      radioGroupButtons(
-        "period", choices = c("Day" = "day", "Week" = "week", "Month" = "month"),
-        direction = "horizontal", justified = TRUE, size = "normal"
-      )
-    ),
     column(
       width = 12,
       plotlyOutput("downloads_trend")
@@ -35,25 +17,21 @@ ui <- fluidPage(
 )
 
 server <- function(input, output, session) {
-  period <- reactive({
-    input$period
-  })
-  
-  output$test <- renderText({
-    period()
-  })
   
   output$downloads_trend <- renderPlotly({
-    plot_ly(get(period()), type = "scatter", mode = "lines") %>%
+    plot_ly(opacity = 0.7) %>% 
       add_trace(
-        x = ~period, y = ~count, name = period(),
-        line = list(color = "#0F2540", width = 2), opacity = 0.5
-      ) %>%
+        x = src$date, y = src$count, type = "scatter", mode = "lines",
+        line = list(color = "#3182BD"),
+        hoverinfo = "text", hovertext = paste0(
+          "</br> Date: ", src$date,
+          "</br> Download Times: ", src$count
+        )
+      ) %>% 
       layout(
         xaxis = list(title = "Date"),
-        yaxis = list(title = "Download Times"),
-        showlegend = FALSE,
-        margin = list(l = 30, t = 0, r = 10, b = 0)
+        yaxis = list(title = "Download Times", zeroline = FALSE),
+        showlegend = FALSE, hovermode = "x unified"
       )
   })
 }
