@@ -14,7 +14,7 @@ library(DT)
 library(gt)
 
 library(nycflights13)
-library(car)
+# library(car)
 
 source("./utils/utils.R")
 source("./setting/colors.R")

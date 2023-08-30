@@ -74,7 +74,8 @@ norm_test <- function(ks_res, sw_res, var_x, var_y) {
 
 
 levene_test <- function(dat) {
-  res <- car::leveneTest(dat$analyze, dat$group)
+  res <- t.test(dat$anylyze, dat$group)
+  # res <- car::leveneTest(dat$analyze, dat$group)
   data.table::data.table(
     Statistic = .format_statistic(res$`F value`[1]),
     `P-value` = .format_statistic(res$`Pr(>F)`[1])
